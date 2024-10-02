@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración</title>
+
+    <!-- Estilos CSS -->
+    <style>
+        /* Estilos para el header sticky (fijo) */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #333;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            box-shadow: 0px 4px 2px -2px gray;
+            z-index: 1000;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 16px;
+        }
+
+        header .menu-left, header .menu-right {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Estilos para los enlaces del menú */
+        header a:hover {
+            text-decoration: underline;
+        }
+
+        /* Espaciado para que el contenido no quede cubierto por el header */
+        .content {
+            margin-top: 70px;
+        }
+
+        /* Estilo para el mensaje de advertencia (sticky en la parte inferior izquierda) */
+        .warning-message {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background-color: #ffcccb;
+            color: #a94442;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .warning-message a {
+            color: #a94442;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        /* Estilo para el menú de navegación que permanece visible */
+        .menu-left {
+            position: sticky;
+            top: 0;
+            background-color: #333;
+            padding: 10px;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        /* Estilo para cuando el contenido se desplaza */
+        .scrollable-content {
+            margin-top: 100px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header sticky -->
+    <header>
+        <!-- Menú izquierda -->
+        <div class="menu-left">
+            <a href="/toggle_website">Activar/Desactivar Website</a>
+        </div>
+
+        <!-- Menú derecha -->
+        <div class="menu-right">
+            <a href="/perfil">Perfil</a>
+            <a href="/logout" style="margin-left: 20px;">Cerrar Sesión</a>
+        </div>
+    </header>
+
+    <!-- Mensaje de advertencia sticky en la parte inferior izquierda -->
+    {% if mostrar_mensaje %}
+    <div class="warning-message">
+        Es hora de cambiar su contraseña por defecto. <a href="/actualizar_contrasena">Actualizar Contraseña</a>
+    </div>
+    {% endif %}
+
+    <!-- Contenido principal -->
+    <div class="scrollable-content">
+        <h2>Bienvenido al Panel de Administración, {{ user }}</h2>
+        <p>Este es el panel donde los administradores pueden gestionar usuarios y realizar otras tareas administrativas.</p>
+    </div>
+
+</body>
+</html>

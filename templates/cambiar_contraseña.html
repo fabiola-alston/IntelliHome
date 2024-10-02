@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cambiar Contraseña</title>
+</head>
+<body>
+    <h2>Cambiar Contraseña</h2>
+
+    <form action="/actualizar_contraseña" method="POST">
+        <label for="new_password">Nueva Contraseña:</label>
+        <input type="password" id="new_password" name="new_password" required>
+        <button type="submit">Cambiar</button>
+    </form>
+
+    <br>
+    <a href="/admin">Volver al Panel de Administración</a>
+</body>
+</html>
