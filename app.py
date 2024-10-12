@@ -3,80 +3,132 @@ import os
 import re
 import random
 import smtplib
+import json 
 from email.message import EmailMessage
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
 
 app = Flask(__name__)
-app.secret_key = 'secretkey'
+app.secret_key = "secretkey"
 
 # Estado de la aplicación (True = habilitada, False = deshabilitada)
 app_enabled = True  # La aplicación comienza habilitada
 
 # Ruta al archivo donde se guardarán los usuarios
-USERS_FILE = 'usuarios.txt'
-UPLOAD_FOLDER = 'static/uploads/'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# USERS_FILE = "usuarios.txt"
+USERS_FILE = "usuarios.json"
+UPLOAD_FOLDER = "static/uploads/"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Definir un tiempo límite para el cambio de contraseña (2 minutos)
 PASSWORD_CHANGE_INTERVAL = timedelta(minutes=2)
 
-# Función para leer usuarios desde el archivo
+# Función para leer usuarios desde el archivo JSON
 def leer_usuarios():
     usuarios = []
+    administradores = []
     try:
-        with open(USERS_FILE, 'r') as f:
-            for line in f:
-                # Desglosar todos los campos del archivo (alias, email, password, nombre, fecha_nacimiento, forma_pago, foto_perfil)
-                datos = line.strip().split(',')
-                
-                # Solo obtenemos los 7 campos esperados (alias, email, password, nombre, fecha_nacimiento, forma_pago, foto_perfil)
-                if len(datos) >= 7:
-                    alias, email, password, nombre, fecha_nacimiento, forma_pago, foto_perfil = datos
-                    usuarios.append({'alias': alias, 'email': email, 'password': password,'nombre': nombre, 'fecha_nacimiento': fecha_nacimiento, 'forma_pago': forma_pago, 'foto_perfil': foto_perfil})
-                else:
-                    print(f"Error en la línea: {line}. No tiene el formato correcto.")
+        with open(USERS_FILE, "r") as f:
+            data = json.load(f)
+            usuarios = data.get("usuarios", [])
+            administradores = data.get("administradores", [])
+        
+        # Función para verificar campos requeridos
+        def verificar_campos(usuario):
+            required_fields = ["alias", "email", "password", "nombre", "fecha_nacimiento", "forma_pago", "foto_perfil", "casas"]
+            return all(field in usuario.keys() for field in required_fields)
+        
+        # Verificar campos para usuarios y administradores
+        usuarios = [u for u in usuarios if verificar_campos(u)]
+        administradores = [a for a in administradores if verificar_campos(a)]
+        
+        # Combinar usuarios y administradores en una sola lista
+        todos_usuarios = usuarios + administradores
+        
     except FileNotFoundError:
-        # Si el archivo no existe, devolvemos una lista vacía
         print("Archivo de usuarios no encontrado.")
+    except json.JSONDecodeError:
+        print("Error al decodificar el archivo JSON.")
     except Exception as e:
-        # Cualquier otro error al leer el archivo
         print(f"Error al leer el archivo: {e}")
-    return usuarios
+    
+    return todos_usuarios
 
+# Asegúrate de que esta variable esté definida correctamente
 
 
 # Función para verificar si el alias o correo ya existen
 def alias_o_correo_duplicado(alias, email):
     usuarios = leer_usuarios()
     for usuario in usuarios:
-        if usuario['alias'] == alias or usuario['email'] == email:
+        if usuario["alias"] == alias or usuario["email"] == email:
             return True
     return False
 
-def registrar_usuario(alias, email, password, nombre, fecha_nacimiento, forma_pago, foto_perfil):
+
+def registrar_usuario(
+    alias, email, password, nombre, fecha_nacimiento, forma_pago, foto_perfil, casas=[], admin=False
+):
+    nuevo_usuario = {
+        "alias": alias,
+        "email": email,
+        "password": password,
+        "nombre": nombre,
+        "fecha_nacimiento": fecha_nacimiento,
+        "forma_pago": forma_pago,
+        "foto_perfil": foto_perfil,
+        "casas": casas
+    }
+
     try:
-        with open(USERS_FILE, 'a') as f:
-            # Escribimos los datos del usuario en el archivo
-            f.write(f'{alias},{email},{password},{nombre},{fecha_nacimiento},{forma_pago},{foto_perfil}\n')
-        print(f"Usuario {alias} registrado correctamente.")
+        # Leer el archivo JSON existente
+        with open(USERS_FILE, "r+") as f:
+            data = json.load(f)
+            
+            # Decidir si agregar a la lista de administradores o usuarios
+            if admin:
+                data["administradores"].append(nuevo_usuario)
+            else:
+                data["usuarios"].append(nuevo_usuario)
+            
+            # Volver al inicio del archivo y escribir los datos actualizados
+            f.seek(0)
+            json.dump(data, f, indent=4)
+            f.truncate()
+
+        print(f"Usuario {alias} registrado correctamente como {'administrador' if admin else 'usuario'}.")
+    except FileNotFoundError:
+        # Si el archivo no existe, crearlo con la estructura correcta
+        data = {"administradores": [], "usuarios": []}
+        if admin:
+            data["administradores"].append(nuevo_usuario)
+        else:
+            data["usuarios"].append(nuevo_usuario)
+        with open(USERS_FILE, "w") as f:
+            json.dump(data, f, indent=4)
+        print(f"Archivo creado y usuario {alias} registrado correctamente como {'administrador' if admin else 'usuario'}.")
+    except json.JSONDecodeError:
+        print("Error al decodificar el archivo JSON existente.")
+        flash("Ocurrió un error al registrar al usuario. El archivo de usuarios está corrupto.")
     except Exception as e:
         print(f"Error al escribir en el archivo: {e}")
         flash("Ocurrió un error al registrar al usuario. Inténtalo de nuevo.")
+
 
 # Función para validar la contraseña
 def validación_contraseña(password):
     if len(password) < 7:
         return False, "La contraseña debe tener al menos 7 caracteres."
-    if not re.search(r'[A-Z]', password):
+    if not re.search(r"[A-Z]", password):
         return False, "La contraseña debe contener al menos una letra mayúscula."
-    if not re.search(r'[a-z]', password):
+    if not re.search(r"[a-z]", password):
         return False, "La contraseña debe contener al menos una letra minúscula."
-    if not re.search(r'\d', password):
+    if not re.search(r"\d", password):
         return False, "La contraseña debe contener al menos un número."
     if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
         return False, "La contraseña debe contener al menos un símbolo especial."
     return True, "Contraseña válida."
+
 
 # Función para enviar un correo electrónico con el código de verificación
 def enviar_codigo(email, codigo):
@@ -84,7 +136,8 @@ def enviar_codigo(email, codigo):
     sender_password = "feum sttx vaqc peip"
 
     msg = EmailMessage()
-    msg.set_content(f"""
+    msg.set_content(
+        f"""
     Estimado usuario,
 
     Saludos desde Intelli Home. A continuación, le proporcionamos su código de verificación:
@@ -97,178 +150,204 @@ def enviar_codigo(email, codigo):
 
     Atentamente,
     El equipo de Intelli Home.
-    """)
+    """
+    )
 
-    msg['Subject'] = 'Código de Verificación'
-    msg['From'] = sender_email
-    msg['To'] = email
+    msg["Subject"] = "Código de Verificación"
+    msg["From"] = sender_email
+    msg["To"] = email
 
     try:
-        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
             server.login(sender_email, sender_password)
             server.send_message(msg)
     except Exception as e:
         print(f"Error al enviar el correo: {e}")
 
+
 # Ruta para habilitar/deshabilitar la aplicación desde el panel de administración
-@app.route('/toggle_app', methods=['POST'])
+@app.route("/toggle_app", methods=["POST"])
 def toggle_app():
     global app_enabled
-    action = request.form['action']
+    action = request.form["action"]
     if action == "Habilitar":
         app_enabled = True
         flash("La aplicación ha sido habilitada.")
     elif action == "Deshabilitar":
         app_enabled = False
         flash("La aplicación ha sido deshabilitada.")
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for("admin_dashboard"))
+
 
 app_enabled = True  # Inicialmente habilitado
 
-@app.route('/toggle_website', methods=['GET', 'POST'])
+
+@app.route("/toggle_website", methods=["GET", "POST"])
 def toggle_website():
     global app_enabled
-    if 'user' in session and session['user'] == 'Admin':
-        if request.method == 'POST':
-            action = request.form['action']
-            if action == 'Habilitar':
+    if "user" in session and session["user"] == "Admin":
+        if request.method == "POST":
+            action = request.form["action"]
+            if action == "Habilitar":
                 app_enabled = True
-                flash('El sitio web ha sido habilitado', 'success')
-            elif action == 'Deshabilitar':
+                flash("El sitio web ha sido habilitado", "success")
+            elif action == "Deshabilitar":
                 app_enabled = False
-                flash('El sitio web ha sido deshabilitado', 'warning')
-        return render_template('toggle_website.html', app_enabled=app_enabled)
+                flash("El sitio web ha sido deshabilitado", "warning")
+        return render_template("toggle_website.html", app_enabled=app_enabled)
     else:
-        return redirect(url_for('home'))
-
+        return redirect(url_for("home"))
 
 
 # Ruta para la página principal de inicio de sesión
-@app.route('/')
+@app.route("/")
 def home():
     if not app_enabled:
         return "La aplicación está actualmente deshabilitada. Vuelve más tarde."
-    return render_template('login.html')
+    return render_template("login.html")
+
 
 # Ruta para el registro inicial
-@app.route('/register', methods=['GET', 'POST'])
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == 'POST':
-        alias = request.form['alias']
-        email = request.form['email']
-        nombre = request.form['nombre']
-        fecha_nacimiento = request.form['fecha_nacimiento']
-        forma_pago = request.form['pago']
-        
+    if request.method == "POST":
+        alias = request.form["alias"]
+        email = request.form["email"]
+        nombre = request.form["nombre"]
+        fecha_nacimiento = request.form["fecha_nacimiento"]
+        forma_pago = request.form["pago"]
+
         # Validar si el alias o correo ya existen
         if alias_o_correo_duplicado(alias, email):
             flash("El alias o el correo ya están en uso. Por favor, elige otros.")
-            return render_template('register.html')
+            return render_template("register.html")
 
         # Manejar la subida de la foto de perfil
-        if 'foto_perfil' in request.files:
-            foto = request.files['foto_perfil']
-            if foto.filename != '':
+        if "foto_perfil" in request.files:
+            foto = request.files["foto_perfil"]
+            if foto.filename != "":
                 filename = secure_filename(foto.filename)
-                foto.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                foto.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
             else:
                 filename = None
         else:
             filename = None
 
         # Guardar los datos en la sesión para la validación
-        session['alias'] = alias
-        session['email'] = email
-        session['nombre'] = nombre
-        session['fecha_nacimiento'] = fecha_nacimiento
-        session['forma_pago'] = forma_pago
-        session['foto_perfil'] = filename
+        session["alias"] = alias
+        session["email"] = email
+        session["nombre"] = nombre
+        session["fecha_nacimiento"] = fecha_nacimiento
+        session["forma_pago"] = forma_pago
+        session["foto_perfil"] = filename
 
         # Generar y enviar código de verificación con límite de 2 minutos
-        session['codigo'] = random.randint(10000, 99999)
-        session['codigo_expiracion'] = datetime.now(timezone.utc) + timedelta(minutes=2)
-        session['intentos'] = 1  # Se permite un intento extra
+        session["codigo"] = random.randint(10000, 99999)
+        session["codigo_expiracion"] = datetime.now(timezone.utc) + timedelta(minutes=2)
+        session["intentos"] = 1  # Se permite un intento extra
 
-        enviar_codigo(email, session['codigo'])
-        
-        return redirect(url_for('validar_correo'))
-    return render_template('register.html')
+        enviar_codigo(email, session["codigo"])
+
+        return redirect(url_for("validar_correo"))
+    return render_template("register.html")
+
 
 # Ruta para validar el código enviado al correo
-@app.route('/validar_correo', methods=['GET', 'POST'])
+@app.route("/validar_correo", methods=["GET", "POST"])
 def validar_correo():
-    if request.method == 'POST':
-        codigo_ingresado = request.form['codigo']
-        
+    if request.method == "POST":
+        codigo_ingresado = request.form["codigo"]
+
         now = datetime.now(timezone.utc)
-        codigo_expiracion = session['codigo_expiracion']
-        
+        codigo_expiracion = session["codigo_expiracion"]
+
         # Verificar si el código ha expirado
         if now > codigo_expiracion:
-            if session['intentos'] < 2:
+            if session["intentos"] < 2:
                 flash("El código ha expirado. Se enviará un nuevo código.")
-                session['codigo'] = random.randint(10000, 99999)
-                session['codigo_expiracion'] = datetime.now(timezone.utc) + timedelta(minutes=2)
-                enviar_codigo(session['email'], session['codigo'])
-                session['intentos'] += 1
+                session["codigo"] = random.randint(10000, 99999)
+                session["codigo_expiracion"] = datetime.now(timezone.utc) + timedelta(
+                    minutes=2
+                )
+                enviar_codigo(session["email"], session["codigo"])
+                session["intentos"] += 1
             else:
                 flash("El código ha expirado y ya no tienes más intentos.")
-                return redirect(url_for('home'))
-        elif str(codigo_ingresado) == str(session['codigo']):
-            return redirect(url_for('validar_contraseña'))
+                return redirect(url_for("home"))
+        elif str(codigo_ingresado) == str(session["codigo"]):
+            return redirect(url_for("validar_contraseña"))
         else:
             flash("Código incorrecto, intenta nuevamente.")
-            return render_template('validar_correo.html')
-    return render_template('validar_correo.html')
+            return render_template("validar_correo.html")
+    return render_template("validar_correo.html")
+
 
 # Ruta para validar la contraseña
-@app.route('/validar_contraseña', methods=['GET', 'POST'])
+@app.route("/validar_contraseña", methods=["GET", "POST"])
 def validar_contraseña():
-    if request.method == 'POST':
-        password = request.form['password']
+    if request.method == "POST":
+        password = request.form["password"]
         valid, message = validación_contraseña(password)
         if valid:
-            registrar_usuario(session['alias'], session['email'], password, session['nombre'],
-                              session['fecha_nacimiento'], session['forma_pago'], session['foto_perfil'])
+            registrar_usuario(
+                session["alias"],
+                session["email"],
+                password,
+                session["nombre"],
+                session["fecha_nacimiento"],
+                session["forma_pago"],
+                session["foto_perfil"],
+            )
             flash("Usuario registrado correctamente")
-            return redirect(url_for('home'))  # Redirigir al inicio de sesión
+            return redirect(url_for("home"))  # Redirigir al inicio de sesión
         else:
             flash(message)
-            return render_template('validar_contraseña.html')
-    return render_template('validar_contraseña.html')
+            return render_template("validar_contraseña.html")
+    return render_template("validar_contraseña.html")
+
 
 # Ruta para manejar el inicio de sesión
-@app.route('/login', methods=['POST'])
+@app.route("/login", methods=["POST"])
 def login():
-    alias = request.form['alias']
-    password = request.form['password']
+    alias = request.form["alias"]
+    password = request.form["password"]
     usuarios = leer_usuarios()
+    print(usuarios)
 
     for usuario in usuarios:
-        if usuario['alias'] == alias and usuario['password'] == password:
-            session['user'] = alias
-            session['foto_perfil'] = usuario['foto_perfil']  # Guardar la foto en la sesión
-            if alias == 'Admin':
-                return redirect(url_for('admin_dashboard'))
+        if usuario["alias"] == alias and usuario["password"] == password:
+            session["user"] = alias
+            session["foto_perfil"] = usuario[
+                "foto_perfil"
+            ]  # Guardar la foto en la sesión
+            if alias == "Admin":
+                return redirect(url_for("admin_dashboard"))
             else:
-                return redirect(url_for('user_dashboard'))
+                return redirect(url_for("user_dashboard"))
     flash("Usuario o contraseña incorrectos")
-    return redirect(url_for('home'))
+    return redirect(url_for("home"))
+
 
 # Ruta para el panel de administración
-@app.route('/admin')
+@app.route("/admin")
 def admin_dashboard():
     # Simular última vez que se cambió la contraseña si no está en la sesión
-    if 'last_password_change' not in session:
-        session['last_password_change'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+    if "last_password_change" not in session:
+        session["last_password_change"] = datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S.%f"
+        )
 
     # Convertir el tiempo guardado en la sesión a datetime
     try:
-        last_password_change = datetime.strptime(session['last_password_change'], '%Y-%m-%d %H:%M:%S.%f')
+        last_password_change = datetime.strptime(
+            session["last_password_change"], "%Y-%m-%d %H:%M:%S.%f"
+        )
     except ValueError:
         # Si la cadena no contiene microsegundos, intenta sin ellos
-        last_password_change = datetime.strptime(session['last_password_change'], '%Y-%m-%d %H:%M:%S')
+        last_password_change = datetime.strptime(
+            session["last_password_change"], "%Y-%m-%d %H:%M:%S"
+        )
 
     # Verificar si han pasado más de 2 minutos desde el último cambio
     now = datetime.now()
@@ -276,80 +355,102 @@ def admin_dashboard():
     if now - last_password_change > PASSWORD_CHANGE_INTERVAL:
         mostrar_mensaje = True
 
-    return render_template('admin.html', user=session.get('user', 'Admin'), user_foto=session.get('user_foto'), mostrar_mensaje=mostrar_mensaje)
+    return render_template(
+        "admin.html",
+        user=session.get("user", "Admin"),
+        user_foto=session.get("user_foto"),
+        mostrar_mensaje=mostrar_mensaje,
+    )
+
 
 # Ruta para cambiar la contraseña
-@app.route('/actualizar_contraseña', methods=['GET', 'POST'])
+@app.route("/actualizar_contraseña", methods=["GET", "POST"])
 def actualizar_contrasena():
-    if request.method == 'POST':
-        nueva_contrasena = request.form['new_password']
-        alias = session.get('user', 'Admin')
+    if request.method == "POST":
+        nueva_contrasena = request.form["new_password"]
+        alias = session.get("user", "Admin")
 
         # Actualizar la contraseña del usuario en el archivo
         actualizar_contraseña_usuario(alias, nueva_contrasena)
 
         # Actualizar la fecha de cambio de contraseña
-        session['last_password_change'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+        session["last_password_change"] = datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S.%f"
+        )
         flash("Contraseña actualizada exitosamente.")
-        return redirect(url_for('admin_dashboard'))
-    return render_template('cambiar_contraseña.html')
+        return redirect(url_for("admin_dashboard"))
+    return render_template("cambiar_contraseña.html")
+
 
 # Función para actualizar la contraseña del usuario en el archivo
 def actualizar_contraseña_usuario(alias, nueva_contraseña):
     usuarios = []
     try:
-        with open('usuarios.txt', 'r') as f:
+        with open("usuarios.txt", "r") as f:
             for line in f:
-                usuario_data = line.strip().split(',')
+                usuario_data = line.strip().split(",")
                 if usuario_data[0] == alias:
                     # Actualizar la contraseña para el alias dado
                     usuario_data[2] = nueva_contraseña
                 usuarios.append(usuario_data)
-        
+
         # Escribir la actualización en el archivo
-        with open('usuarios.txt', 'w') as f:
+        with open("usuarios.txt", "w") as f:
             for usuario in usuarios:
-                f.write(','.join(usuario) + '\n')
+                f.write(",".join(usuario) + "\n")
     except FileNotFoundError:
         flash("Error: No se encontró el archivo de usuarios.")
         return
 
 
-
-
 # Ruta para el panel de usuario normal
-@app.route('/user')
+@app.route("/user")
 def user_dashboard():
-    if 'user' in session and session['user'] != 'Admin':
-        user_foto = session.get('foto_perfil', None)  # Obtener la foto de perfil de la sesión
-        return render_template('user.html', user=session['user'], user_foto=user_foto)
+    if "user" in session and session["user"] != "Admin":
+        user_foto = session.get(
+            "foto_perfil", None
+        )  # Obtener la foto de perfil de la sesión
+        return render_template("user.html", user=session["user"], user_foto=user_foto)
     else:
-        return redirect(url_for('home'))
+        return redirect(url_for("home"))
+
 
 # Ruta para el perfil del usuario
-@app.route('/perfil')
+@app.route("/perfil")
 def perfil():
-    if 'user' in session:
+    if "user" in session:
         # Recuperar los datos del usuario desde la sesión
-        alias = session.get('user')
-        foto_perfil = session.get('foto_perfil')
-        email = session.get('email')  # Asegúrate de que el email esté en la sesión
-        nombre = session.get('nombre')
-        fecha_nacimiento = session.get('fecha_nacimiento')
-        forma_pago = session.get('forma_pago')
-        
-        return render_template('perfil.html', alias=alias, foto_perfil=foto_perfil, email=email,
-                               nombre=nombre, fecha_nacimiento=fecha_nacimiento, forma_pago=forma_pago)
-    else:
-        return redirect(url_for('home'))
+        alias = session.get("user")
+        foto_perfil = session.get("foto_perfil")
+        email = session.get("email")  # Asegúrate de que el email esté en la sesión
+        nombre = session.get("nombre")
+        fecha_nacimiento = session.get("fecha_nacimiento")
+        forma_pago = session.get("forma_pago")
 
+        return render_template(
+            "perfil.html",
+            alias=alias,
+            foto_perfil=foto_perfil,
+            email=email,
+            nombre=nombre,
+            fecha_nacimiento=fecha_nacimiento,
+            forma_pago=forma_pago,
+        )
+    else:
+        return redirect(url_for("home"))
 
 
 # Ruta para cerrar sesión
-@app.route('/logout')
+@app.route("/logout")
 def logout():
-    session.pop('user', None)
-    return redirect(url_for('home'))
+    session.pop("user", None)
+    return redirect(url_for("home"))
 
-if __name__ == '__main__':
+
+# Ruta para explorar
+@app.route("/explorar")
+def explorar():
+    return render_template("explorar.html")
+
+if __name__ == "__main__":
     app.run(debug=True)

@@ -1,0 +1,46 @@
+{
+    "administradores": [
+        {
+            "alias": "Admin",
+            "email": "bla@gmail.com",
+            "password": "TEC2026*",
+            "nombre": "Admin",
+            "fecha_nacimiento": "2024-09-09",
+            "forma_pago": "Visca",
+            "foto_perfil": "admin.png",
+            "casas": []
+        }
+    ],
+    "usuarios": [
+        {
+            "alias": "User",
+            "email": "blabla@gmail.com",
+            "password": "CE2024",
+            "nombre": "User",
+            "fecha_nacimiento": "2027-09-09",
+            "forma_pago": "Visca",
+            "foto_perfil": "user.png",
+            "casas": []
+        },
+        {
+            "alias": "Daniel",
+            "email": "daniel.burger.cr@gmail.com",
+            "password": "Burgermar*22",
+            "nombre": "Daniel Burger Marin",
+            "fecha_nacimiento": "2024-09-19",
+            "forma_pago": "TicaPay",
+            "foto_perfil": "buga.png",
+            "casas": []
+        },
+        {
+            "alias": "rodrigo",
+            "email": "roarba011@gmail.com",
+            "password": "prueba32A.",
+            "nombre": "Rodrigo Arce",
+            "fecha_nacimiento": "2006-01-07",
+            "forma_pago": "Visca",
+            "foto_perfil": "folder.jpg",
+            "casas": []
+        }
+    ]
+}
