@@ -308,25 +308,25 @@ def validar_contraseña():
 
 
 # Ruta para manejar el inicio de sesión
-@app.route("/login", methods=["POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    alias = request.form["alias"]
-    password = request.form["password"]
-    usuarios = leer_usuarios()
-    print(usuarios)
+    error_message = None
+    if request.method == "POST":
+        alias = request.form["alias"]
+        password = request.form["password"]
+        usuarios = leer_usuarios()
+        print(usuarios)
 
-    for usuario in usuarios:
-        if usuario["alias"] == alias and usuario["password"] == password:
-            session["user"] = alias
-            session["foto_perfil"] = usuario[
-                "foto_perfil"
-            ]  # Guardar la foto en la sesión
-            if alias == "Admin":
-                return redirect(url_for("admin_dashboard"))
-            else:
-                return redirect(url_for("user_dashboard"))
-    flash("Usuario o contraseña incorrectos")
-    return redirect(url_for("home"))
+        for usuario in usuarios:
+            if usuario["alias"] == alias and usuario["password"] == password:
+                session["user"] = alias
+                session["foto_perfil"] = usuario["foto_perfil"]  # Guardar la foto en la sesión
+                if alias == "Admin":
+                    return redirect(url_for("admin_dashboard"))
+                else:
+                    return redirect(url_for("user_dashboard"))
+        error_message = "Usuario o contraseña incorrectos"
+    return render_template("login.html", error_message=error_message)
 
 
 # Ruta para el panel de administración

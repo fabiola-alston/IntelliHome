@@ -10,7 +10,12 @@
 <body>
     <div class="login-container">
         <h2>Iniciar Sesión</h2>
-        <form action="/login" method="POST">
+        {% if error_message %}
+        <div class="error-message">
+            <p>{{ error_message }}</p>
+        </div>
+        {% endif %}
+        <form action="{{ url_for('login') }}" method="POST">
             <div class="input-group">
                 <label for="alias">Alias:</label>
                 <input type="text" id="alias" name="alias" required>
@@ -24,7 +29,7 @@
             <button type="submit">Iniciar Sesión</button>
         </form>
         <div class="register-link">
-            <a href="/register">Regístrate aquí</a>
+            <a href="{{ url_for('register') }}">Regístrate aquí</a>
         </div>
     </div>
 </body>
