@@ -79,3 +79,12 @@ button:hover {
         font-size: 16px; /* Mejor tamaño para evitar zoom en iOS */
     }
 }
+
+.error-message {
+    background-color: #fdecea;
+    border-left: 4px solid #e74c3c;
+    color: #e74c3c;
+    padding: 10px;
+    margin-bottom: 1rem;
+    font-weight: bold;
+}

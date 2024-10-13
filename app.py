@@ -256,6 +256,7 @@ def register():
 # Ruta para validar el código enviado al correo
 @app.route("/validar_correo", methods=["GET", "POST"])
 def validar_correo():
+    error_message = None
     if request.method == "POST":
         codigo_ingresado = request.form["codigo"]
 
@@ -265,7 +266,7 @@ def validar_correo():
         # Verificar si el código ha expirado
         if now > codigo_expiracion:
             if session["intentos"] < 2:
-                flash("El código ha expirado. Se enviará un nuevo código.")
+                error_message = "El código ha expirado. Se enviará un nuevo código."
                 session["codigo"] = random.randint(10000, 99999)
                 session["codigo_expiracion"] = datetime.now(timezone.utc) + timedelta(
                     minutes=2
@@ -273,14 +274,13 @@ def validar_correo():
                 enviar_codigo(session["email"], session["codigo"])
                 session["intentos"] += 1
             else:
-                flash("El código ha expirado y ya no tienes más intentos.")
-                return redirect(url_for("home"))
+                error_message = "El código ha expirado y ya no tienes más intentos."
+                return render_template("validar_correo.html", error_message=error_message)
         elif str(codigo_ingresado) == str(session["codigo"]):
             return redirect(url_for("validar_contraseña"))
         else:
-            flash("Código incorrecto, intenta nuevamente.")
-            return render_template("validar_correo.html")
-    return render_template("validar_correo.html")
+            error_message = "Código incorrecto, intenta nuevamente."
+    return render_template("validar_correo.html", error_message=error_message)
 
 
 # Ruta para validar la contraseña
