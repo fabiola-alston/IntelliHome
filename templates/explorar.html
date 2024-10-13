@@ -15,11 +15,7 @@
             {% for casa in casas %}
                 <div class="house-card">
                     <h2>{{ casa.nombre }}</h2>
-                    {% if casa.imagen %}
-                        <img src="{{ url_for('static', filename='uploads/' + casa.imagen) }}" alt="{{ casa.nombre }}" class="house-image">
-                    {% else %}
-                        <img src="{{ url_for('static', filename='default/casa.jpeg') }}" alt="Imagen por defecto" class="house-image">
-                    {% endif %}
+                    <img src="{{ url_for('static', filename=casa.imagen) }}" alt="{{ casa.nombre }}" class="house-image">
                     <p>Ubicación: {{ casa.ubicacion }}</p>
                     <p>Precio: ${{ casa.precio }}</p>
                     <a href="{{ url_for('detalles_casa', id=casa.id) }}" class="btn-details">Ver detalles</a>

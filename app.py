@@ -509,7 +509,7 @@ def explorar():
 @app.route("/casa/<int:id>")
 def detalles_casa(id):
     try:
-        with open(USERS_FILE, "r") as f:
+        with open(USERS_FILE, "r", encoding='utf-8') as f:
             data = json.load(f)
             casas = data.get("casas", [])
             casa = next((casa for casa in casas if casa["id"] == id), None)
