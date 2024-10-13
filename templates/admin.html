@@ -100,7 +100,7 @@
         <!-- Menú derecha -->
         <div class="menu-right">
             <a href="/perfil">
-                <img src="{{ user_foto }}" alt="Foto de perfil">
+                <img src="{{ url_for('static', filename='uploads/admin.png') }}" alt="Foto de perfil">
                 Perfil
             </a>
             <a href="/logout" style="margin-left: 20px;">Cerrar Sesión</a>

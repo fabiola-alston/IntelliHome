@@ -1,0 +1,82 @@
+* {
+  margin: 0;
+  padding: 0;
+  font-family: "Roboto";
+}
+
+h1 {
+  color: #060606;
+  font-size: 2rem;
+  margin-top: 20px;
+  margin-bottom: 20px;
+
+}
+
+.navbar {
+  background-color: #333;
+  color: #fff;
+  padding: 10px;
+}
+
+.navbar ul {
+  list-style-type: none;
+  display: flex;
+  justify-content: center;
+}
+
+.navbar li {
+  margin: 0 10px;
+}
+
+.navbar a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.profile-info {
+  list-style-type: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.profile-container {
+  text-align: center;
+  margin: 20px;
+  background-color: #f0f0f0;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.profile-picture {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  margin: 20px auto;
+  display: block;
+}
+
+.houses-container {
+  margin: 20px;
+  background-color: #f0f0f0;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+footer {
+  text-align: center;
+  margin: 20px;
+  color: #888;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+  .profile-picture {
+    width: 120px;
+    height: 120px;
+  }
+}

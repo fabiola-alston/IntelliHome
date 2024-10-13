@@ -286,6 +286,7 @@ def validar_correo():
 # Ruta para validar la contraseña
 @app.route("/validar_contraseña", methods=["GET", "POST"])
 def validar_contraseña():
+    error_message = None
     if request.method == "POST":
         password = request.form["password"]
         valid, message = validación_contraseña(password)
@@ -302,9 +303,8 @@ def validar_contraseña():
             flash("Usuario registrado correctamente")
             return redirect(url_for("home"))  # Redirigir al inicio de sesión
         else:
-            flash(message)
-            return render_template("validar_contraseña.html")
-    return render_template("validar_contraseña.html")
+            error_message = message
+    return render_template("validar_contraseña.html", error_message=error_message)
 
 
 # Ruta para manejar el inicio de sesión
