@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import re
@@ -454,10 +454,20 @@ def actualizar_contraseña_usuario(alias, nueva_contraseña):
 @app.route("/user")
 def user_dashboard():
     if "user" in session and session["user"] != "Admin":
-        user_foto = session.get(
-            "foto_perfil", None
-        )  # Obtener la foto de perfil de la sesión
-        return render_template("user.html", user=session["user"], user_foto=user_foto)
+        with open(USERS_FILE, "r", encoding='utf-8') as f:
+            data = json.load(f)
+        
+        usuario_actual = None
+        for lista_usuarios in [data["administradores"], data["usuarios"]]:
+            for usuario in lista_usuarios:
+                if usuario["alias"] == session["user"]:
+                    usuario_actual = usuario
+                    break
+            if usuario_actual:
+                break
+        
+        casas_alquiladas = usuario_actual.get("casas", [])
+        return render_template("user.html", user=session["user"], casas=casas_alquiladas)
     else:
         return redirect(url_for("home"))
 
@@ -585,6 +595,108 @@ def actualizar_perfil():
         print(f"Error al actualizar el perfil: {e}")
         flash("Ocurrió un error al actualizar el perfil")
         return redirect(url_for("user_dashboard"))
+
+
+@app.route("/alquilar_casa/<int:id>")
+def alquilar_casa(id):
+    if "user" not in session:
+        flash("Debes iniciar sesión para alquilar una casa.")
+        return redirect(url_for("home"))
+
+    try:
+        with open(USERS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        # Buscar la casa en el archivo JSON
+        casa = next((casa for casa in data["casas"] if casa["id"] == id), None)
+        if not casa:
+            flash("Casa no encontrada.")
+            return redirect(url_for("explorar"))
+
+        if casa["inquilinos"]:
+            flash("Esta casa ya está alquilada.")
+            return redirect(url_for("detalles_casa", id=id))
+
+        # Buscar al usuario actual
+        usuario_actual = None
+        for lista_usuarios in [data["administradores"], data["usuarios"]]:
+            for usuario in lista_usuarios:
+                if usuario["alias"] == session["user"]:
+                    usuario_actual = usuario
+                    break
+            if usuario_actual:
+                break
+
+        if not usuario_actual:
+            flash("Usuario no encontrado.")
+            return redirect(url_for("explorar"))
+
+        # Agregar la casa a la lista de casas del usuario
+        if "casas" not in usuario_actual:
+            usuario_actual["casas"] = []
+        usuario_actual["casas"].append(casa)
+
+        # Agregar al usuario como inquilino de la casa
+        casa["inquilinos"].append(session["user"])
+
+        # Guardar los cambios en el archivo JSON
+        with open(USERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+
+        flash(f"Has alquilado exitosamente la casa: {casa['nombre']}")
+        return redirect(url_for("user_dashboard"))
+
+    except Exception as e:
+        print(f"Error al alquilar la casa: {e}")
+        flash("Ocurrió un error al intentar alquilar la casa.")
+        return redirect(url_for("explorar"))
+
+@app.route("/autorizar_inquilino/<int:casa_id>", methods=["POST"])
+def autorizar_inquilino(casa_id):
+    if "user" not in session:
+        return jsonify({"error": "Debes iniciar sesión para autorizar inquilinos."})
+
+    nuevo_inquilino = request.form.get("nuevo_inquilino")
+
+    try:
+        with open(USERS_FILE, "r", encoding='utf-8') as f:
+            data = json.load(f)
+
+        # Buscar la casa
+        casa = next((casa for casa in data["casas"] if casa["id"] == casa_id), None)
+        if not casa:
+            return jsonify({"error": "Casa no encontrada."})
+
+        # Buscar al nuevo inquilino
+        nuevo_usuario = None
+        for lista_usuarios in [data["administradores"], data["usuarios"]]:
+            nuevo_usuario = next((u for u in lista_usuarios if u["alias"] == nuevo_inquilino), None)
+            if nuevo_usuario:
+                break
+
+        if not nuevo_usuario:
+            return jsonify({"error": f"El usuario {nuevo_inquilino} no existe."})
+
+        # Verificar si el usuario ya es inquilino
+        if nuevo_inquilino in casa["inquilinos"]:
+            return jsonify({"error": f"{nuevo_inquilino} ya es inquilino de esta casa."})
+
+        # Agregar el nuevo inquilino a la casa
+        casa["inquilinos"].append(nuevo_inquilino)
+
+        # Agregar la casa a la lista de casas del nuevo inquilino
+        if "casas" not in nuevo_usuario:
+            nuevo_usuario["casas"] = []
+        nuevo_usuario["casas"].append(casa)
+
+        # Guardar los cambios
+        with open(USERS_FILE, "w", encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+
+        return jsonify({"success": f"{nuevo_inquilino} ha sido autorizado como inquilino."})
+    except Exception as e:
+        print(f"Error al autorizar inquilino: {e}")
+        return jsonify({"error": "Ocurrió un error al autorizar al inquilino."})
 
 
 if __name__ == "__main__":

@@ -62,7 +62,21 @@
         <h1>Mis casas</h1>
         {% for casa in casas %}
             <div class="house-card">
-                <img src="{{ url_for('static', filename='uploads/' + casa.foto_principal) }}" alt="Foto de la casa">
+                <div class="house-image">
+                    <img src="{{ url_for('static', filename=casa.imagen) }}" alt="Foto de la casa">
+                </div>
+                <div class="house-details">
+                    <h2>{{ casa.nombre }}</h2>
+                    <p><strong>Ubicación:</strong> {{ casa.ubicacion }}</p>
+                    <p><strong>Precio:</strong> ${{ casa.precio }}</p>
+                    <p><strong>Inquilinos:</strong> {{ casa.inquilinos|join(', ') }}</p>
+                </div>
+                <button class="btn-authorize" onclick="toggleAuthorizeForm('{{ casa.id }}')">Autorizar inquilino</button>
+                <form id="authorize-form-{{ casa.id }}" class="authorize-form" style="display: none;" onsubmit="return autorizarInquilino('{{ casa.id }}')">
+                    <input type="text" id="nuevo-inquilino-{{ casa.id }}" placeholder="Alias del nuevo inquilino" required>
+                    <button type="submit">Autorizar</button>
+                </form>
+                <p id="error-message-{{ casa.id }}" class="error-message" style="display: none;"></p>
             </div>
         {% endfor %}
         {% if not casas %}
@@ -81,6 +95,40 @@
                 displayElement.style.display = 'block';
                 formElement.style.display = 'none';
             }
+        }
+
+        function toggleAuthorizeForm(casaId) {
+            var form = document.getElementById('authorize-form-' + casaId);
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function autorizarInquilino(casaId) {
+            var nuevoInquilino = document.getElementById('nuevo-inquilino-' + casaId).value;
+            var errorMessage = document.getElementById('error-message-' + casaId);
+
+            fetch("{{ url_for('autorizar_inquilino', casa_id=0) }}".replace('0', casaId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'nuevo_inquilino=' + encodeURIComponent(nuevoInquilino)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    errorMessage.textContent = data.error;
+                    errorMessage.style.display = 'block';
+                } else {
+                    location.reload(); // Recarga la página para mostrar los cambios
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                errorMessage.textContent = 'Ocurrió un error al procesar la solicitud.';
+                errorMessage.style.display = 'block';
+            });
+
+            return false; // Previene el envío del formulario
         }
     </script>
 {% endblock %}

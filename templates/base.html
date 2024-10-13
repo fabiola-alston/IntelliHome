@@ -1,33 +1,57 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/base.css') }}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
     <title>{% block title %}Título por defecto{% endblock %}</title>
     {% block head %}{% endblock %}
-</head>
-<body>
+  </head>
+  <body>
     <header>
-        <nav class="navbar">
-            <ul>
-                <li><a href="{{ url_for('explorar') }}">Explorar</a></li>
-                <li><a href="{{ url_for('user_dashboard') }}">Dashboard</a></li>
-                <li><a href="{{ url_for('logout') }}">Salir</a></li>
-            </ul>
-        </nav>
+      <nav class="navbar">
+        <ul>
+          <li><a href="{{ url_for('explorar') }}">Explorar</a></li>
+          <li><a href="{{ url_for('user_dashboard') }}">Dashboard</a></li>
+          <li><a href="{{ url_for('logout') }}">Salir</a></li>
+        </ul>
+      </nav>
     </header>
 
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
+    <main>{% block content %} {% endblock %}</main>
 
     <footer>
-        <p>IntelliHome &copy; 2024</p>
+      <p>IntelliHome &copy; 2024</p>
     </footer>
-</body>
+    <div id="flash-messages">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          {% for message in messages %}
+            <div class="flash-message danger">
+              <strong>PELIGRO:</strong> {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <script>
+      // Código para cerrar los mensajes flash después de 5 segundos
+      setTimeout(function() {
+        var flashMessages = document.getElementById('flash-messages');
+        if (flashMessages) {
+          flashMessages.style.display = 'none';
+        }
+      }, 5000);
+    </script>
+  </body>
 </html>
