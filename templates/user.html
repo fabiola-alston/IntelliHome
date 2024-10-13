@@ -5,35 +5,57 @@
 {% block content %}
     <div class="profile-container">
         <h1>Bienvenido, {{ session['alias'] }}</h1>
-        <ul class="profile-info">
-            <li>
-                {% if user_foto %}
-                    <img
-                    src="{{ url_for('static', filename='uploads/' + user_foto) }}"
-                    alt="Foto de Perfil"
-                    class="profile-picture"
-                    />
-                {% else %}
-                    <img
-                        src="{{ url_for('static', filename='uploads/default_profile.png') }}"
-                    alt="Foto de Perfil"
-                    class="profile-picture"
-                    />
-                {% endif %}
-            </li>
-            <li>
-                <p><b>Nombre:</b> {{ session['nombre'] }}</p>
-            </li>
-            <li>
-                <p><b>Alias:</b> {{ session['alias'] }}</p>
-            </li>
-            <li>
-                <p><b>Fecha de nacimiento:</b> {{ session['fecha_nacimiento'] }}</p>
-            </li>
-            <li>
-                <p><b>Forma de pago:</b> {{ session['forma_pago'] }}</p>
-            </li>
-        </ul>
+        <div id="profile-display">
+            <ul class="profile-info">
+                <li>
+                    {% if session['foto_perfil'] %}
+                        <img src="{{ url_for('static', filename='uploads/' + session['foto_perfil']) }}" alt="Foto de Perfil" class="profile-picture" />
+                    {% else %}
+                        <img src="{{ url_for('static', filename='uploads/default_profile.png') }}" alt="Foto de Perfil" class="profile-picture" />
+                    {% endif %}
+                </li>
+                <li><b>Nombre:</b> {{ session['nombre'] }}</li>
+                <li><b>Alias:</b> {{ session['alias'] }}</li>
+                <li><b>Fecha de nacimiento:</b> {{ session['fecha_nacimiento'] }}</li>
+                <li><b>Forma de pago:</b> {{ session['forma_pago'] }}</li>
+            </ul>
+            <button onclick="toggleEditForm()">Editar Perfil</button>
+        </div>
+
+        <form id="edit-form" action="{{ url_for('actualizar_perfil') }}" method="POST" enctype="multipart/form-data" style="display: none;">
+            <ul class="profile-info">
+                <li>
+                    <label for="foto_perfil">Foto de Perfil:</label>
+                    <input type="file" id="foto_perfil" name="foto_perfil" accept="image/*">
+                </li>
+                <li>
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" id="nombre" name="nombre" value="{{ session['nombre'] }}" required>
+                </li>
+                <li>
+                    <label for="alias">Alias:</label>
+                    <input type="text" id="alias" name="alias" value="{{ session['alias'] }}" required>
+                </li>
+                <li>
+                    <label for="fecha_nacimiento">Fecha de nacimiento:</label>
+                    <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" value="{{ session['fecha_nacimiento'] }}" required>
+                </li>
+                <li>
+                    <label for="forma_pago">Forma de pago:</label>
+                    <input type="text" id="forma_pago" name="forma_pago" value="{{ session['forma_pago'] }}" required>
+                </li>
+                <li>
+                    <label for="password">Nueva contraseña:</label>
+                    <input type="password" id="password" name="password" placeholder="Dejar en blanco para no cambiar">
+                </li>
+                <li>
+                    <label for="confirm_password">Confirmar nueva contraseña:</label>
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirmar nueva contraseña">
+                </li>
+            </ul>
+            <button type="submit">Actualizar Perfil</button>
+            <button type="button" onclick="toggleEditForm()">Cancelar</button>
+        </form>
     </div>
 
     <div class="houses-container">
@@ -48,5 +70,17 @@
         {% endif %}
     </div>
 
-    <!-- Resto del contenido específico de la página de usuario -->
+    <script>
+        function toggleEditForm() {
+            var displayElement = document.getElementById('profile-display');
+            var formElement = document.getElementById('edit-form');
+            if (formElement.style.display === 'none') {
+                displayElement.style.display = 'none';
+                formElement.style.display = 'block';
+            } else {
+                displayElement.style.display = 'block';
+                formElement.style.display = 'none';
+            }
+        }
+    </script>
 {% endblock %}

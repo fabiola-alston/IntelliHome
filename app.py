@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import re
 import random
@@ -19,7 +20,7 @@ app_enabled = True  # La aplicación comienza habilitada
 USERS_FILE = "usuarios.json"
 UPLOAD_FOLDER = "static/uploads/"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-app.config['JSON_AS_ASCII'] = False
+app.config["JSON_AS_ASCII"] = False
 # Definir un tiempo límite para el cambio de contraseña (2 minutos)
 PASSWORD_CHANGE_INTERVAL = timedelta(minutes=2)
 
@@ -29,7 +30,7 @@ def leer_usuarios():
     usuarios = []
     administradores = []
     try:
-        with open(USERS_FILE, "r", encoding='utf-8') as f:
+        with open(USERS_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
             usuarios = data.get("usuarios", [])
             administradores = data.get("administradores", [])
@@ -101,7 +102,7 @@ def registrar_usuario(
 
     try:
         # Leer el archivo JSON existente
-        with open(USERS_FILE, "r+", encoding='utf-8') as f:
+        with open(USERS_FILE, "r+", encoding="utf-8") as f:
             data = json.load(f)
 
             # Decidir si agregar a la lista de administradores o usuarios
@@ -125,7 +126,7 @@ def registrar_usuario(
             data["administradores"].append(nuevo_usuario)
         else:
             data["usuarios"].append(nuevo_usuario)
-        with open(USERS_FILE, "w", encoding='utf-8') as f:
+        with open(USERS_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4)
         print(
             f"Archivo creado y usuario {alias} registrado correctamente como {'administrador' if admin else 'usuario'}."
@@ -252,7 +253,7 @@ def register():
         if "foto_perfil" in request.files:
             foto = request.files["foto_perfil"]
             if foto.filename != "":
-                filename = "profile/" + secure_filename(
+                filename = secure_filename(
                     f"{alias}.{datetime.now().strftime('%Y%m%d%H%M%S')}.{foto.filename}"
                 )
                 foto.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
@@ -417,7 +418,7 @@ def actualizar_contrasena():
 def actualizar_contraseña_usuario(alias, nueva_contraseña):
     try:
         # Leer el archivo JSON existente
-        with open(USERS_FILE, "r", encoding='utf-8') as f:
+        with open(USERS_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         # Buscar y actualizar la contraseña del usuario
@@ -436,7 +437,7 @@ def actualizar_contraseña_usuario(alias, nueva_contraseña):
             return
 
         # Escribir los datos actualizados de vuelta al archivo JSON
-        with open(USERS_FILE, "w", encoding='utf-8') as f:
+        with open(USERS_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
 
         print(f"Contraseña actualizada para el usuario {alias}")
@@ -497,7 +498,7 @@ def logout():
 @app.route("/explorar")
 def explorar():
     try:
-        with open(USERS_FILE, "r", encoding='utf-8') as f:
+        with open(USERS_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
             casas = data.get("casas", [])
     except Exception as e:
@@ -509,7 +510,7 @@ def explorar():
 @app.route("/casa/<int:id>")
 def detalles_casa(id):
     try:
-        with open(USERS_FILE, "r", encoding='utf-8') as f:
+        with open(USERS_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
             casas = data.get("casas", [])
             casa = next((casa for casa in casas if casa["id"] == id), None)
@@ -522,6 +523,68 @@ def detalles_casa(id):
         print(f"Error al leer el archivo JSON: {e}")
         flash("Error al cargar los detalles de la casa")
         return redirect(url_for("explorar"))
+
+
+@app.route("/actualizar_perfil", methods=["POST"])
+def actualizar_perfil():
+    if "user" not in session:
+        return redirect(url_for("home"))
+
+    try:
+        with open(USERS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        for lista_usuarios in [data["administradores"], data["usuarios"]]:
+            for usuario in lista_usuarios:
+                if usuario["alias"] == session["user"]:
+                    # Actualizar campos
+                    usuario["nombre"] = request.form["nombre"]
+                    usuario["alias"] = request.form["alias"]
+                    usuario["fecha_nacimiento"] = request.form["fecha_nacimiento"]
+                    usuario["forma_pago"] = request.form["forma_pago"]
+
+                    # Manejar la actualización de la foto de perfil
+                    if "foto_perfil" in request.files:
+                        file = request.files["foto_perfil"]
+                        if file.filename != "":
+                            filename = secure_filename(
+                                f"{usuario['alias']}.{datetime.now().strftime('%Y%m%d%H%M%S')}.{file.filename}"
+                            )
+                            file.save(
+                                os.path.join(app.config["UPLOAD_FOLDER"], filename)
+                            )
+                            usuario["foto_perfil"] = filename
+
+                    # Manejar la actualización de la contraseña
+                    new_password = request.form["password"]
+                    if new_password:
+                        if new_password == request.form["confirm_password"]:
+                            usuario["password"] = generate_password_hash(new_password)
+                        else:
+                            flash("Las contraseñas no coinciden")
+                            return redirect(url_for("user_dashboard"))
+
+                    # Actualizar la sesión
+                    session["nombre"] = usuario["nombre"]
+                    session["alias"] = usuario["alias"]
+                    session["fecha_nacimiento"] = usuario["fecha_nacimiento"]
+                    session["forma_pago"] = usuario["forma_pago"]
+                    session["foto_perfil"] = usuario["foto_perfil"]
+
+                    # Guardar los cambios en el archivo JSON
+                    with open(USERS_FILE, "w", encoding="utf-8") as f:
+                        json.dump(data, f, ensure_ascii=False, indent=4)
+
+                    flash("Perfil actualizado con éxito")
+                    return redirect(url_for("user_dashboard"))
+
+        flash("Usuario no encontrado")
+        return redirect(url_for("user_dashboard"))
+
+    except Exception as e:
+        print(f"Error al actualizar el perfil: {e}")
+        flash("Ocurrió un error al actualizar el perfil")
+        return redirect(url_for("user_dashboard"))
 
 
 if __name__ == "__main__":

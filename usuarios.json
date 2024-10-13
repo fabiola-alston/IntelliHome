@@ -27,9 +27,9 @@
             "email": "roarba011@gmail.com",
             "password": "prueba32A.",
             "nombre": "Rodrigo Arce",
-            "fecha_nacimiento": "2024-01-07",
-            "forma_pago": "Visca",
-            "foto_perfil": "profile/rodrigo.20241012190613.cover.jpg",
+            "fecha_nacimiento": "0707-07-07",
+            "forma_pago": "MasterChef",
+            "foto_perfil": "rodrigo.20241012195546.cover.jpg",
             "casas": []
         }
     ],
@@ -48,7 +48,9 @@
             "ubicacion": "Ciudad de México",
             "precio": 150000,
             "imagen": "default/casa.jpeg",
-            "inquilinos": ["el pepe"]
+            "inquilinos": [
+                "el pepe"
+            ]
         }
     ]
 }
