@@ -3,7 +3,7 @@ import os
 import re
 import random
 import smtplib
-import json 
+import json
 from email.message import EmailMessage
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
@@ -19,40 +19,51 @@ app_enabled = True  # La aplicación comienza habilitada
 USERS_FILE = "usuarios.json"
 UPLOAD_FOLDER = "static/uploads/"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
+app.config['JSON_AS_ASCII'] = False
 # Definir un tiempo límite para el cambio de contraseña (2 minutos)
 PASSWORD_CHANGE_INTERVAL = timedelta(minutes=2)
+
 
 # Función para leer usuarios desde el archivo JSON
 def leer_usuarios():
     usuarios = []
     administradores = []
     try:
-        with open(USERS_FILE, "r") as f:
+        with open(USERS_FILE, "r", encoding='utf-8') as f:
             data = json.load(f)
             usuarios = data.get("usuarios", [])
             administradores = data.get("administradores", [])
-        
+
         # Función para verificar campos requeridos
         def verificar_campos(usuario):
-            required_fields = ["alias", "email", "password", "nombre", "fecha_nacimiento", "forma_pago", "foto_perfil", "casas"]
+            required_fields = [
+                "alias",
+                "email",
+                "password",
+                "nombre",
+                "fecha_nacimiento",
+                "forma_pago",
+                "foto_perfil",
+                "casas",
+            ]
             return all(field in usuario.keys() for field in required_fields)
-        
+
         # Verificar campos para usuarios y administradores
         usuarios = [u for u in usuarios if verificar_campos(u)]
         administradores = [a for a in administradores if verificar_campos(a)]
-        
+
         # Combinar usuarios y administradores en una sola lista
         todos_usuarios = usuarios + administradores
-        
+
     except FileNotFoundError:
         print("Archivo de usuarios no encontrado.")
     except json.JSONDecodeError:
         print("Error al decodificar el archivo JSON.")
     except Exception as e:
         print(f"Error al leer el archivo: {e}")
-    
+
     return todos_usuarios
+
 
 # Asegúrate de que esta variable esté definida correctamente
 
@@ -67,7 +78,15 @@ def alias_o_correo_duplicado(alias, email):
 
 
 def registrar_usuario(
-    alias, email, password, nombre, fecha_nacimiento, forma_pago, foto_perfil, casas=[], admin=False
+    alias,
+    email,
+    password,
+    nombre,
+    fecha_nacimiento,
+    forma_pago,
+    foto_perfil,
+    casas=[],
+    admin=False,
 ):
     nuevo_usuario = {
         "alias": alias,
@@ -77,26 +96,28 @@ def registrar_usuario(
         "fecha_nacimiento": fecha_nacimiento,
         "forma_pago": forma_pago,
         "foto_perfil": foto_perfil,
-        "casas": casas
+        "casas": casas,
     }
 
     try:
         # Leer el archivo JSON existente
-        with open(USERS_FILE, "r+") as f:
+        with open(USERS_FILE, "r+", encoding='utf-8') as f:
             data = json.load(f)
-            
+
             # Decidir si agregar a la lista de administradores o usuarios
             if admin:
                 data["administradores"].append(nuevo_usuario)
             else:
                 data["usuarios"].append(nuevo_usuario)
-            
+
             # Volver al inicio del archivo y escribir los datos actualizados
             f.seek(0)
             json.dump(data, f, indent=4)
             f.truncate()
 
-        print(f"Usuario {alias} registrado correctamente como {'administrador' if admin else 'usuario'}.")
+        print(
+            f"Usuario {alias} registrado correctamente como {'administrador' if admin else 'usuario'}."
+        )
     except FileNotFoundError:
         # Si el archivo no existe, crearlo con la estructura correcta
         data = {"administradores": [], "usuarios": []}
@@ -104,12 +125,16 @@ def registrar_usuario(
             data["administradores"].append(nuevo_usuario)
         else:
             data["usuarios"].append(nuevo_usuario)
-        with open(USERS_FILE, "w") as f:
+        with open(USERS_FILE, "w", encoding='utf-8') as f:
             json.dump(data, f, indent=4)
-        print(f"Archivo creado y usuario {alias} registrado correctamente como {'administrador' if admin else 'usuario'}.")
+        print(
+            f"Archivo creado y usuario {alias} registrado correctamente como {'administrador' if admin else 'usuario'}."
+        )
     except json.JSONDecodeError:
         print("Error al decodificar el archivo JSON existente.")
-        flash("Ocurrió un error al registrar al usuario. El archivo de usuarios está corrupto.")
+        flash(
+            "Ocurrió un error al registrar al usuario. El archivo de usuarios está corrupto."
+        )
     except Exception as e:
         print(f"Error al escribir en el archivo: {e}")
         flash("Ocurrió un error al registrar al usuario. Inténtalo de nuevo.")
@@ -227,7 +252,9 @@ def register():
         if "foto_perfil" in request.files:
             foto = request.files["foto_perfil"]
             if foto.filename != "":
-                filename = secure_filename(foto.filename)
+                filename = "profile/" + secure_filename(
+                    f"{alias}.{datetime.now().strftime('%Y%m%d%H%M%S')}.{foto.filename}"
+                )
                 foto.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
             else:
                 filename = None
@@ -275,7 +302,9 @@ def validar_correo():
                 session["intentos"] += 1
             else:
                 error_message = "El código ha expirado y ya no tienes más intentos."
-                return render_template("validar_correo.html", error_message=error_message)
+                return render_template(
+                    "validar_correo.html", error_message=error_message
+                )
         elif str(codigo_ingresado) == str(session["codigo"]):
             return redirect(url_for("validar_contraseña"))
         else:
@@ -320,7 +349,9 @@ def login():
         for usuario in usuarios:
             if usuario["alias"] == alias and usuario["password"] == password:
                 session["user"] = alias
-                session["foto_perfil"] = usuario["foto_perfil"]  # Guardar la foto en la sesión
+                session["foto_perfil"] = usuario[
+                    "foto_perfil"
+                ]  # Guardar la foto en la sesión
                 if alias == "Admin":
                     return redirect(url_for("admin_dashboard"))
                 else:
@@ -384,23 +415,38 @@ def actualizar_contrasena():
 
 # Función para actualizar la contraseña del usuario en el archivo
 def actualizar_contraseña_usuario(alias, nueva_contraseña):
-    usuarios = []
     try:
-        with open("usuarios.txt", "r") as f:
-            for line in f:
-                usuario_data = line.strip().split(",")
-                if usuario_data[0] == alias:
-                    # Actualizar la contraseña para el alias dado
-                    usuario_data[2] = nueva_contraseña
-                usuarios.append(usuario_data)
+        # Leer el archivo JSON existente
+        with open(USERS_FILE, "r", encoding='utf-8') as f:
+            data = json.load(f)
 
-        # Escribir la actualización en el archivo
-        with open("usuarios.txt", "w") as f:
-            for usuario in usuarios:
-                f.write(",".join(usuario) + "\n")
+        # Buscar y actualizar la contraseña del usuario
+        usuario_actualizado = False
+        for lista_usuarios in [data["administradores"], data["usuarios"]]:
+            for usuario in lista_usuarios:
+                if usuario["alias"] == alias:
+                    usuario["password"] = nueva_contraseña
+                    usuario_actualizado = True
+                    break
+            if usuario_actualizado:
+                break
+
+        if not usuario_actualizado:
+            flash("Error: No se encontró el usuario.")
+            return
+
+        # Escribir los datos actualizados de vuelta al archivo JSON
+        with open(USERS_FILE, "w", encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+
+        print(f"Contraseña actualizada para el usuario {alias}")
+
     except FileNotFoundError:
         flash("Error: No se encontró el archivo de usuarios.")
-        return
+    except json.JSONDecodeError:
+        flash("Error: El archivo de usuarios está corrupto.")
+    except Exception as e:
+        flash(f"Error al actualizar la contraseña: {str(e)}")
 
 
 # Ruta para el panel de usuario normal
@@ -450,7 +496,33 @@ def logout():
 # Ruta para explorar
 @app.route("/explorar")
 def explorar():
-    return render_template("explorar.html")
+    try:
+        with open(USERS_FILE, "r", encoding='utf-8') as f:
+            data = json.load(f)
+            casas = data.get("casas", [])
+    except Exception as e:
+        print(f"Error al leer el archivo JSON: {e}")
+        casas = []
+    return render_template("explorar.html", casas=casas)
+
+
+@app.route("/casa/<int:id>")
+def detalles_casa(id):
+    try:
+        with open(USERS_FILE, "r") as f:
+            data = json.load(f)
+            casas = data.get("casas", [])
+            casa = next((casa for casa in casas if casa["id"] == id), None)
+            if casa:
+                return render_template("detalles_casa.html", casa=casa)
+            else:
+                flash("Casa no encontrada")
+                return redirect(url_for("explorar"))
+    except Exception as e:
+        print(f"Error al leer el archivo JSON: {e}")
+        flash("Error al cargar los detalles de la casa")
+        return redirect(url_for("explorar"))
+
 
 if __name__ == "__main__":
     app.run(debug=True)

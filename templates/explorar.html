@@ -2,6 +2,32 @@
 
 {% block title %}Explorar{% endblock %}
 
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/explorar.css') }}">
+{% endblock %}
+
 {% block content %}
-    <h1>Explorar</h1>
+<div class="explore-container">
+    <h1>Explorar Casas</h1>
+    
+    {% if casas %}
+        <div class="houses-grid">
+            {% for casa in casas %}
+                <div class="house-card">
+                    <h2>{{ casa.nombre }}</h2>
+                    {% if casa.imagen %}
+                        <img src="{{ url_for('static', filename='uploads/' + casa.imagen) }}" alt="{{ casa.nombre }}" class="house-image">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='default/casa.jpeg') }}" alt="Imagen por defecto" class="house-image">
+                    {% endif %}
+                    <p>Ubicación: {{ casa.ubicacion }}</p>
+                    <p>Precio: ${{ casa.precio }}</p>
+                    <a href="{{ url_for('detalles_casa', id=casa.id) }}" class="btn-details">Ver detalles</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No hay casas disponibles en este momento.</p>
+    {% endif %}
+</div>
 {% endblock %}

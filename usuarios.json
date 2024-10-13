@@ -23,24 +23,28 @@
             "casas": []
         },
         {
-            "alias": "Daniel",
-            "email": "daniel.burger.cr@gmail.com",
-            "password": "Burgermar*22",
-            "nombre": "Daniel Burger Marin",
-            "fecha_nacimiento": "2024-09-19",
-            "forma_pago": "TicaPay",
-            "foto_perfil": "buga.png",
-            "casas": []
-        },
-        {
             "alias": "rodrigo",
             "email": "roarba011@gmail.com",
             "password": "prueba32A.",
             "nombre": "Rodrigo Arce",
-            "fecha_nacimiento": "2006-01-07",
+            "fecha_nacimiento": "2024-01-07",
             "forma_pago": "Visca",
-            "foto_perfil": "folder.jpg",
+            "foto_perfil": "profile/rodrigo.20241012190613.cover.jpg",
             "casas": []
+        }
+    ],
+    "casas": [
+        {
+            "id": 1,
+            "nombre": "Casa de Playa",
+            "ubicacion": "Playa del Carmen",
+            "precio": 250000
+        },
+        {
+            "id": 2,
+            "nombre": "Apartamento Céntrico",
+            "ubicacion": "Ciudad de México",
+            "precio": 150000
         }
     ]
 }
