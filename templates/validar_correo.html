@@ -22,7 +22,10 @@
                 <label for="codigo">Código de Verificación:</label>
                 <input type="text" id="codigo" name="codigo" required>
             </div>
-            <button type="submit">Validar</button>
+            <div class="button-group">
+                <button type="submit" class="btn-validate">Validar</button>
+                <a href="{{ url_for('home') }}" class="btn-cancel">Cancelar</a>
+            </div>
         </form>
     </div>
 </body>
