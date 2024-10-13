@@ -344,12 +344,87 @@ def perfil():
         return redirect(url_for('home'))
 
 
-
 # Ruta para cerrar sesión
 @app.route('/logout')
 def logout():
     session.pop('user', None)
     return redirect(url_for('home'))
+
+
+INFO_PAGOS_FILE = 'info_pago.txt'
+# lee info de pagos del txt correspondiente
+def leer_info_pagos(username):
+    try:
+        with open(INFO_PAGOS_FILE, 'r') as f:
+            for line in f:
+                datos = line.strip().split(',')
+                if len(datos) == 6 and datos[0] == username:
+                    return {
+                        'card_number' : datos[1],
+                        'card_holder' : datos[2],
+                        'date' : datos[3],
+                        'pin' : datos[4],
+                        'brand' : datos[5]
+                    }
+    except FileNotFoundError:
+        print("Archivo no encontrado :(")
+    return None
+
+
+# guardar informacion de pago
+def guardar_info_pago(username, card_number, card_holder, date, pin, brand):
+    all_info = []
+    found = False
+
+    try: 
+        with open(INFO_PAGOS_FILE, 'r') as f:
+            for line in f:
+                datos = line.strip().split(',')
+                if datos[0] == username:
+                    all_info.append(f"{username}, {card_number}, {card_holder}, {date}, {pin}, {brand}")
+                    found = True
+                else:
+                    all_info.append(line.strip())
+    except FileNotFoundError:
+        pass
+
+    if not found:
+        all_info.append(f"{username}, {card_number}, {card_holder}, {date}, {pin}, {brand}")
+    
+    with open(INFO_PAGOS_FILE, 'w') as f:
+        for info in all_info:
+            f.write(info + '\n')
+
+# pagina de pagos
+@app.route('/pagos', methods=['GET', 'POST'])
+def pagos():
+    if 'user' not in session:
+        return redirect(url_for('home'))
+    
+    username = session['user']
+    print(f"Username: {username}")
+
+    card_info = leer_info_pagos(username) 
+ 
+    if card_info:
+        print("went in")
+        print(card_info)
+        
+    else:
+        guardar_info_pago(username, "- -", "- -", "- -", "- -", "- -")
+        card_info = leer_info_pagos(username)
+        print("didn't go in")
+    
+    return render_template('pagos.html', card_info=card_info)
+
+
+@app.route('/add_pagos', methods=["GET", "POST"])
+def add_pagos():
+    return render_template('add_pagos.html')
+
+@app.route('/guardar_pagos', methods=["GET", "POST"])
+def guardar_pagos():
+    return render_template('guardar_pagos.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
