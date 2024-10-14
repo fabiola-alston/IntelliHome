@@ -9,27 +9,29 @@
             }
             }   
 
-        // Function to validate that the first digit is between 1 and 4
+            // Function to validate that the first digit is 1,2,3 or 5
             function validateFirstDigit(event) {
-                allowOnlyNumbers(event)
-                const inputField = document.getElementById('pin');
-                const inputValue = inputField.value + event.key; // Combine current input with the new key
+                allowOnlyNumbers(event);
+                const inputField = document.getElementById('card_number');
+                const inputValue = inputField.value + event.key;
 
                 // Allow only numeric input
                 if (event.key < '0' || event.key > '9') {
-                    event.preventDefault(); // Block non-numeric input
+                    event.preventDefault();
                     return;
                 }
 
-                // Check if the first character is within the allowed set (1, 2, 3, or 5)
-                if (inputValue.length === 1 && !['1', '2', '3', '5'].includes(event.key)) {
-                    event.preventDefault();
-                    alert("The first number must be either 1, 2, 3, or 5.");
-                    inputField.value = ''; // Clear the input field
+                // Check if it's the first character being entered
+                if (inputField.value.length === 0) {
+                    // Only allow first digit to be 1, 2, 3, or 5
+                    if (!['1', '2', '3', '5'].includes(event.key)) {
+                        event.preventDefault();
+                        alert("The first number must be either 1, 2, 3, or 5.");
+                    }
                 }
             }
 
-                function validateMonthInput(event) {
+            function validateMonthInput(event) {
                 const inputField = document.getElementById('month');
                 const inputValue = inputField.value + event.key;
 
@@ -43,7 +45,7 @@
                 if (inputValue.length > 2) {
                     event.preventDefault();
                     return;
-                }
+            }
 
                 // Ensure the value is between 01 and 12
                 const month = parseInt(inputValue);
@@ -54,7 +56,7 @@
                 }
             }
 
-                function validateYearInput(event) {
+            function validateYearInput(event) {
                 const inputField = document.getElementById('year');
                 const inputValue = inputField.value + event.key;
 
@@ -78,8 +80,8 @@
                         inputField.value = ''; // Clear the input field
                         event.preventDefault();
                     }
-                }
             }
+        }
             
         </script>
     </head>
@@ -87,9 +89,9 @@
         <h1>Agregar informacion de tarjeta</h1>
         <p>Favor brindar toda la informacion que se le solicite.</p>
 
-        <form>
+        <form action="/guardar_pagos" method="POST">
             <label>Numero de tarjeta</label><br>
-            <input type="text" id="card_number" name="card_number" maxlength="16" onkeypress="validateFirstDigit(event)" placeholder="XXXX XXXX XXXX XXXX"><br>
+            <input type="text" id="card_number" name="card_number" maxlength="16" onkeydown="validateFirstDigit(event)" placeholder="XXXX XXXX XXXX XXXX"><br>
             <br>
             <label>Nombre del tarjetahabiente</label><br>
             <input type="text" id="card_holder" name="card_holder" placeholder="John Doe"><br>
@@ -102,9 +104,6 @@
             <label for="pin">Enter your PIN:</label> <br>
             <input type="text" id="pin" name="pin" maxlength="4" onkeypress="allowOnlyNumbers(event)" placeholder="****"><br>
             <br>
-        </form>
-
-        <form action="/guardar_pagos" method="POST">
             <button type="submit">Guardar informacion</button>
         </form>
 

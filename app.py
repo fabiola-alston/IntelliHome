@@ -358,13 +358,15 @@ def leer_info_pagos(username):
         with open(INFO_PAGOS_FILE, 'r') as f:
             for line in f:
                 datos = line.strip().split(',')
-                if len(datos) == 6 and datos[0] == username:
+                if len(datos) == 8 and datos[0] == username:
                     return {
                         'card_number' : datos[1],
                         'card_holder' : datos[2],
                         'date' : datos[3],
                         'pin' : datos[4],
-                        'brand' : datos[5]
+                        'brand' : datos[5],
+                        'debt' : float(datos[6]),
+                        'amount' : float(datos[7])
                     }
     except FileNotFoundError:
         print("Archivo no encontrado :(")
@@ -372,7 +374,7 @@ def leer_info_pagos(username):
 
 
 # guardar informacion de pago
-def guardar_info_pago(username, card_number, card_holder, date, pin, brand):
+def guardar_info_pago(username, card_number, card_holder, date, pin, brand, debt, amount):
     all_info = []
     found = False
 
@@ -381,7 +383,7 @@ def guardar_info_pago(username, card_number, card_holder, date, pin, brand):
             for line in f:
                 datos = line.strip().split(',')
                 if datos[0] == username:
-                    all_info.append(f"{username}, {card_number}, {card_holder}, {date}, {pin}, {brand}")
+                    all_info.append(f"{username}, {card_number}, {card_holder}, {date}, {pin}, {brand}, {debt}, {amount}")
                     found = True
                 else:
                     all_info.append(line.strip())
@@ -389,11 +391,14 @@ def guardar_info_pago(username, card_number, card_holder, date, pin, brand):
         pass
 
     if not found:
-        all_info.append(f"{username}, {card_number}, {card_holder}, {date}, {pin}, {brand}")
+        all_info.append(f"{username}, {card_number}, {card_holder}, {date}, {pin}, {brand}, {debt}, {amount}")
     
     with open(INFO_PAGOS_FILE, 'w') as f:
         for info in all_info:
             f.write(info + '\n')
+
+def guardar_info_pago_rapido(username, card_info):
+    guardar_info_pago(username, card_info['card_number'], card_info['card_holder'], card_info['date'], card_info['pin'], card_info['brand'], card_info['debt'], card_info['amount'])
 
 # pagina de pagos
 @app.route('/pagos', methods=['GET', 'POST'])
@@ -408,7 +413,6 @@ def pagos():
  
     if card_info:
         print("went in")
-        print(card_info)
         
     else:
         guardar_info_pago(username, "- -", "- -", "- -", "- -", "- -")
@@ -422,9 +426,80 @@ def pagos():
 def add_pagos():
     return render_template('add_pagos.html')
 
-@app.route('/guardar_pagos', methods=["GET", "POST"])
+@app.route('/guardar_pagos', methods=["POST"])
 def guardar_pagos():
-    return render_template('guardar_pagos.html')
+    card_number = request.form['card_number']
+    card_holder = request.form['card_holder']
+    month = request.form['month']
+    year = request.form['year']
+    pin = request.form['pin']
+
+    print(card_number, card_holder, month, year, pin)
+    
+    # Aquí podrías guardar la información, procesarla o validarla
+    # Por ejemplo, puedes crear un diccionario con la información:
+
+    brand = ' '
+
+    print(card_number[0])
+
+    if card_number[0] == '1':
+        brand = 'Visca'
+    elif card_number[0] == '2':
+        brand = 'MasterChef'
+    elif card_number[0] == '3':
+        brand = 'AmericanCity'
+    elif card_number[0] == '5':
+        brand = 'TicaPay'
+
+    card_info = {
+        'card_number': card_number,
+        'card_holder': card_holder,
+        'date': f"{month}/{year}",
+        'pin': pin,
+        'brand': brand
+    }
+
+    if 'user' not in session:
+        return redirect(url_for('home'))
+    
+    username = session['user']
+
+    guardar_info_pago(username, card_info['card_number'], card_info['card_holder'], card_info['date'], card_info['pin'], card_info['brand'], card_info['debt'], card_info['amount'])
+
+    return render_template('guardar_pagos.html', card_info=card_info)
+
+@app.route('/realizar_pagos', methods=["POST"])
+def realizar_pagos():
+    if 'user' not in session:
+        return redirect(url_for('home'))
+    
+    username = session['user']
+
+    card_info = leer_info_pagos(username)
+
+    return render_template('realizar_pagos.html', card_info = card_info)
+
+@app.route('/realizando_pago', methods=['POST'])
+def realizando_pagos():
+    if 'user' not in session:
+        return redirect(url_for('home'))
+    
+    username = session['user']
+
+    card_info = leer_info_pagos(username)
+
+    if card_info['amount'] < card_info['debt']:
+        message = "Error, fondos insuficientes."
+        return render_template('pago_realizado_ventana.html', message=message)
+    
+    else:
+        amount = card_info['amount'] - card_info['debt']
+        card_info['amount'] = amount
+        card_info['debt'] = 0
+        guardar_info_pago_rapido(username, card_info)
+        message = "Pago realizado exitosamente. Puedes volver a la pagina principal."
+        return render_template('pago_realizado_ventana.html', message=message)
 
 if __name__ == '__main__':
     app.run(debug=True)

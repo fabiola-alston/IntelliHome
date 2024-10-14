@@ -1,4 +1,4 @@
 Admin,bla@gmail.com,TEC2026*,Admin,2024-09-09,Visca,admin.png
 User, blabla@gmail.com,CE2024,User,2027-09-09,Visca,user.png
 Daniel,daniel.burger.cr@gmail.com,Burgermar*22,Daniel Burger Marin,2024-09-19,TicaPay,buga.png
-fabiolaa,fabiola.alston@gmail.com,Nigger*333,Fabiola Alston Ramos,2006-03-26,Visca,user.png
+fabiolaa,fabiola.alston@gmail.com,soap67,Fabiola Alston Ramos,2006-03-26,Visca,user.png

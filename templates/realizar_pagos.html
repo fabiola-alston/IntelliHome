@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Realizar Pagos</title>
+
+    </head>
+
+    <body>
+        <h1>Realizar pagos pendientes</h1>
+        <p>A continuacion se le mostraran los pagos que tiene pendientes.</p>
+
+        <h3>Plan de pago: Plan 1</h3>
+        <form>
+            <button>Ver plan de pago</button>
+        </form>
+        <h3>Cobros pendientes: ${{card_info.debt}}</h3>
+        <p>Nombre: {{card_info.card_holder}}</p>
+        <p>Sueldo disponible: ${{card_info.amount}}</p>
+
+        <form action="/realizando_pago" method="POST">
+            <button type="submit"
+            >Realizar pago total de deudas</button>
+        </form>
+
+    </body>
+</html>
