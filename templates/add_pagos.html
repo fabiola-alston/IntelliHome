@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Agregar metodo de pago</title>
+        <script>
+            function allowOnlyNumbers(event) {
+            if (event.key < '0' || event.key > '9') {
+                event.preventDefault(); // Block non-numeric input
+            }
+            }   
+
+            // Function to validate that the first digit is 1,2,3 or 5
+            function validateFirstDigit(event) {
+                allowOnlyNumbers(event);
+                const inputField = document.getElementById('card_number');
+                const inputValue = inputField.value + event.key;
+
+                // Allow only numeric input
+                if (event.key < '0' || event.key > '9') {
+                    event.preventDefault();
+                    return;
+                }
+
+                // Check if it's the first character being entered
+                if (inputField.value.length === 0) {
+                    // Only allow first digit to be 1, 2, 3, or 5
+                    if (!['1', '2', '3', '5'].includes(event.key)) {
+                        event.preventDefault();
+                        alert("The first number must be either 1, 2, 3, or 5.");
+                    }
+                }
+            }
+
+            function validateMonthInput(event) {
+                const inputField = document.getElementById('month');
+                const inputValue = inputField.value + event.key;
+
+                // Allow only numeric input
+                if (event.key < '0' || event.key > '9') {
+                    event.preventDefault();
+                    return;
+                }
+
+                // Prevent input if more than 2 digits are entered
+                if (inputValue.length > 2) {
+                    event.preventDefault();
+                    return;
+            }
+
+                // Ensure the value is between 01 and 12
+                const month = parseInt(inputValue);
+                if (inputValue.length === 2 && (month < 1 || month > 12)) {
+                    alert("Please enter a valid month between 01 and 12.");
+                    inputField.value = ''; // Clear the input field
+                    event.preventDefault();
+                }
+            }
+
+            function validateYearInput(event) {
+                const inputField = document.getElementById('year');
+                const inputValue = inputField.value + event.key;
+
+                // Allow only numeric input
+                if (event.key < '0' || event.key > '9') {
+                    event.preventDefault();
+                    return;
+                }
+
+                // Prevent input if more than 4 digits are entered
+                if (inputValue.length > 4) {
+                    event.preventDefault();
+                    return;
+                }
+
+                // Optionally, add checks for reasonable year ranges (e.g., 1900-2100)
+                if (inputValue.length === 4) {
+                    const year = parseInt(inputValue);
+                    if (year < 1900 || year > 2100) {
+                        alert("Please enter a valid year between 1900 and 2100.");
+                        inputField.value = ''; // Clear the input field
+                        event.preventDefault();
+                    }
+            }
+        }
+            
+        </script>
+    </head>
+    <body>
+        <h1>Agregar informacion de tarjeta</h1>
+        <p>Favor brindar toda la informacion que se le solicite.</p>
+
+        <form action="/guardar_pagos" method="POST">
+            <label>Numero de tarjeta</label><br>
+            <input type="text" id="card_number" name="card_number" maxlength="16" onkeydown="validateFirstDigit(event)" placeholder="XXXX XXXX XXXX XXXX"><br>
+            <br>
+            <label>Nombre del tarjetahabiente</label><br>
+            <input type="text" id="card_holder" name="card_holder" placeholder="John Doe"><br>
+            <br>
+            <label>Fecha</label><br>
+            <input type="text" id="month" name="month" size="2" placeholder="MM" onkeypress="validateMonthInput(event)">
+            <label>/</label>
+            <input type="text" id="year" name="year" size="4" placeholder="YYYY" onkeypress="validateYearInput(event)"><br>
+            <br>
+            <label for="pin">Enter your PIN:</label> <br>
+            <input type="text" id="pin" name="pin" maxlength="4" onkeypress="allowOnlyNumbers(event)" placeholder="****"><br>
+            <br>
+            <button type="submit">Guardar informacion</button>
+        </form>
+
+    </body>
+</html>
