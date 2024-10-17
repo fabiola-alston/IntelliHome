@@ -635,7 +635,9 @@ def alquilar_casa(id):
             return redirect(url_for("detalles_casa", id=id))
 
         # Buscar al usuario actual
-        usuario_actual = next((u for u in data["usuarios"] if u["alias"] == session["user"]), None)
+        usuario_actual = next(
+            (u for u in data["usuarios"] if u["alias"] == session["user"]), None
+        )
         if not usuario_actual:
             flash("Usuario no encontrado.")
             return redirect(url_for("explorar"))
@@ -678,13 +680,17 @@ def autorizar_inquilino(casa_id):
             return jsonify({"error": "Casa no encontrada."})
 
         # Buscar al nuevo inquilino en la lista de usuarios
-        nuevo_usuario = next((u for u in data["usuarios"] if u["alias"] == nuevo_inquilino), None)
+        nuevo_usuario = next(
+            (u for u in data["usuarios"] if u["alias"] == nuevo_inquilino), None
+        )
         if not nuevo_usuario:
             return jsonify({"error": f"El usuario {nuevo_inquilino} no existe."})
 
         # Verificar si el nuevo inquilino ya es inquilino de la casa
         if nuevo_inquilino in casa["inquilinos"]:
-            return jsonify({"error": f"{nuevo_inquilino} ya es inquilino de esta casa."})
+            return jsonify(
+                {"error": f"{nuevo_inquilino} ya es inquilino de esta casa."}
+            )
 
         # Agregar el nuevo inquilino a la casa
         casa["inquilinos"].append(nuevo_inquilino)
@@ -698,13 +704,160 @@ def autorizar_inquilino(casa_id):
         with open(USERS_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
 
-        return jsonify({"success": f"{nuevo_inquilino} ha sido autorizado como inquilino."})
+        return jsonify(
+            {"success": f"{nuevo_inquilino} ha sido autorizado como inquilino."}
+        )
     except Exception as e:
         print(f"Error al autorizar inquilino: {e}")
         return jsonify({"error": "Ocurrió un error al autorizar al inquilino."})
 
 
+# Lee info de pagos desde el archivo JSON
+def leer_info_pagos(username):
+    try:
+        with open(USERS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            for user in data["usuarios"]:
+                if user["alias"] == username:
+                    return user.get("metodos_pago", [])
+    except FileNotFoundError:
+        print("Archivo no encontrado :(")
+    return None
 
+
+# Guarda información de pago en el archivo JSON
+def guardar_info_pago(
+    username, card_number, card_holder, date, pin, brand, debt, amount
+):
+    try:
+        with open(USERS_FILE, "r+", encoding="utf-8") as f:
+            data = json.load(f)
+            user_found = False
+            for user in data["usuarios"]:
+                if user["alias"] == username:
+                    user_found = True
+                    if "metodos_pago" not in user:
+                        user["metodos_pago"] = []
+                    user["metodos_pago"].append(
+                        {
+                            "card_number": card_number,
+                            "card_holder": card_holder,
+                            "date": date,
+                            "pin": pin,
+                            "brand": brand,
+                            "debt": float(debt),
+                            "amount": float(amount),
+                        }
+                    )
+                    break
+            if not user_found:
+                nuevo_usuario = {
+                    "alias": username,
+                    "metodos_pago": [
+                        {
+                            "card_number": card_number,
+                            "card_holder": card_holder,
+                            "date": date,
+                            "pin": pin,
+                            "brand": brand,
+                            "debt": float(debt),
+                            "amount": float(amount),
+                        }
+                    ],
+                }
+                data["usuarios"].append(nuevo_usuario)
+            f.seek(0)
+            json.dump(data, f, indent=4)
+            f.truncate()
+    except FileNotFoundError:
+        # Si el archivo no existe, crearlo y agregar el primer usuario
+        with open(USERS_FILE, "w", encoding="utf-8") as f:
+            data = {
+                "usuarios": [
+                    {
+                        "alias": username,
+                        "metodos_pago": [
+                            {
+                                "card_number": card_number,
+                                "card_holder": card_holder,
+                                "date": date,
+                                "pin": pin,
+                                "brand": brand,
+                                "debt": float(debt),
+                                "amount": float(amount),
+                            }
+                        ],
+                    }
+                ]
+            }
+            json.dump(data, f, indent=4)
+
+
+@app.route('/agregar_pago', methods=['GET', 'POST'])
+def agregar_pago():
+    if request.method == 'POST':
+        # Aquí puedes manejar el envío del formulario para guardar el método de pago
+        card_number = request.form['card_number']
+        card_holder = request.form['card_holder']
+        month = request.form['month']
+        year = request.form['year']
+        pin = request.form['pin']
+        # Lógica para determinar la marca de la tarjeta
+        brand = request.form['brand']
+
+        if brand.lower() not in ["visca", "masterchef", "americancity", "ticaplay"]:
+            flash("Marca de tarjeta no válida")
+            return redirect(url_for('agregar_pago'))
+
+        print(
+            card_number.isdigit(),
+            len(card_number) == 16,
+            card_holder.isalpha(),
+            len(card_holder) > 0,
+            month.isdigit(),
+            1 <= int(month) <= 13,
+            year.isdigit(),
+            len(year) == 2,
+            pin.isdigit(),
+            3 <= len(pin) <= 4,
+            brand.lower() == "visca" and card_number.startswith("1"),
+            brand.lower() == "masterchef" and card_number.startswith("2"),
+            brand.lower() == "americancity" and card_number.startswith("3"),
+            brand.lower() == "ticaplay" and card_number.startswith("4"),
+        )
+
+        if not (
+            card_number.isdigit()
+            and len(card_number) == 16
+            and card_holder.isalpha()
+            and len(card_holder) > 0
+            and month.isdigit()
+            and 1 <= int(month) <= 13
+            and year.isdigit()
+            and len(year) == 2
+            and pin.isdigit()
+            and 3 <= len(pin) <= 4
+            and (
+                brand.lower() == "visca" and card_number.startswith("1") 
+                or brand.lower() == "masterchef" and card_number.startswith("2")
+                or brand.lower() == "americancity" and card_number.startswith("3")
+                or brand.lower() == "ticaplay" and card_number.startswith("4")
+            )
+        ):
+            flash("Por favor, ingresa información válida")
+            return redirect(url_for('agregar_pago'))
+        # Chequea que la fecha de expiración sea válida
+        current_month = datetime.now().month
+        current_year = datetime.now().year % 100 
+        if int(year) < current_year or (int(year) == current_year and int(month) < current_month):
+            flash("La tarjeta ha expirado")
+            return redirect(url_for('agregar_pago'))
+
+        # Guardar el método de pago
+        username = session['user']
+        # Guardar el método de pago
+        guardar_info_pago(username, card_number, card_holder, f"{month}/{year}", pin, brand, 0, 0) 
+    return render_template('agregar_pago.html')
 
 
 if __name__ == "__main__":

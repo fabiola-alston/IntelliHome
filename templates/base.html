@@ -32,18 +32,6 @@
     <footer>
       <p>IntelliHome &copy; 2024</p>
     </footer>
-    <div id="flash-messages">
-      {% with messages = get_flashed_messages() %}
-        {% if messages %}
-          {% for message in messages %}
-            <div class="flash-message danger">
-              <strong>PELIGRO:</strong> {{ message }}
-            </div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
-    </div>
-
     <script>
       // Código para cerrar los mensajes flash después de 5 segundos
       setTimeout(function() {

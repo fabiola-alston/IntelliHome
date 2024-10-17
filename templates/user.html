@@ -17,9 +17,9 @@
                 <li><b>Nombre:</b> {{ session['nombre'] }}</li>
                 <li><b>Alias:</b> {{ session['alias'] }}</li>
                 <li><b>Fecha de nacimiento:</b> {{ session['fecha_nacimiento'] }}</li>
-                <li><b>Forma de pago:</b> {{ session['forma_pago'] }}</li>
             </ul>
             <button onclick="toggleEditForm()">Editar Perfil</button>
+            <button onclick="location.href='{{ url_for('agregar_pago') }}'">Agregar método de pago</button>
         </div>
 
         <form id="edit-form" action="{{ url_for('actualizar_perfil') }}" method="POST" enctype="multipart/form-data" style="display: none;">
@@ -39,10 +39,6 @@
                 <li>
                     <label for="fecha_nacimiento">Fecha de nacimiento:</label>
                     <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" value="{{ session['fecha_nacimiento'] }}" required>
-                </li>
-                <li>
-                    <label for="forma_pago">Forma de pago:</label>
-                    <input type="text" id="forma_pago" name="forma_pago" value="{{ session['forma_pago'] }}" required>
                 </li>
                 <li>
                     <label for="password">Nueva contraseña:</label>
