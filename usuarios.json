@@ -67,12 +67,12 @@
             "calificacion": [
                 {
                     "usuario": "rodrigo",
-                    "calificacion": 5,
+                    "rating": 5,
                     "comentario": "Excelente lugar para vacacionar"
                 },
                 {
                     "usuario": "aaron",
-                    "calificacion": 4,
+                    "rating": 4,
                     "comentario": "Muy bonita casa, pero le falta mantenimiento"
                 }
             ],
@@ -88,6 +88,7 @@
             "ubicacion": "Ciudad de M\u00e9xico",
             "precio": 150000,
             "imagen": "default/casa.jpeg",
+            "calificacion": [],
             "inquilinos": []
         }
     ]

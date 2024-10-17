@@ -17,7 +17,8 @@
                     <h2>{{ casa.nombre }}</h2>
                     <img src="{{ url_for('static', filename=casa.imagen) }}" alt="{{ casa.nombre }}" class="house-image">
                     <p>Ubicación: {{ casa.ubicacion }}</p>
-                    <p>Precio: ${{ casa.precio }}</p>
+                    <p>Precio: CRC {{ casa.precio }}</p>
+                    <p>Rating: {{ casa.rating_promedio }}</p>
                     <a href="{{ url_for('detalles_casa', id=casa.id) }}" class="btn-details">Ver detalles</a>
                 </div>
             {% endfor %}

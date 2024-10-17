@@ -527,6 +527,15 @@ def explorar():
         with open(USERS_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
             casas = data.get("casas", [])
+
+            for casa in casas:
+                if len(casa["calificacion"]) > 0:
+                    casa["rating_promedio"] = sum(
+                        calificacion["rating"] for calificacion in casa["calificacion"]
+                    ) / len(casa["calificacion"])
+                else:
+                    casa["rating_promedio"] = 0
+
     except Exception as e:
         print(f"Error al leer el archivo JSON: {e}")
         casas = []
@@ -858,6 +867,9 @@ def agregar_pago():
         # Guardar el método de pago
         guardar_info_pago(username, card_number, card_holder, f"{month}/{year}", pin, brand, 0, 0) 
     return render_template('agregar_pago.html')
+
+
+
 
 
 if __name__ == "__main__":
