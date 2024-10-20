@@ -89,7 +89,7 @@
             "precio": 150000,
             "imagen": "default/casa.jpeg",
             "calificacion": [],
-            "inquilinos": []
+            "inqUilinos": []
         }
     ]
 }

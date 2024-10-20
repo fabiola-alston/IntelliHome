@@ -654,6 +654,8 @@ def alquilar_casa(id):
         # Agregar la casa a la lista de casas del usuario
         if "casas" not in usuario_actual:
             usuario_actual["casas"] = []
+
+
         usuario_actual["casas"].append(id)  # Usar ID de la casa
 
         # Agregar al usuario como inquilino de la casa
