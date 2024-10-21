@@ -1,0 +1,42 @@
+{% extends "base.html" %} {% block title %}Pagar Alquiler{% endblock %} {% block
+head %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/pagar_alquiler.css') }}"
+/>
+{% endblock %} {% block content %}
+
+<div class="payment-container">
+  <h1>Pagar Alquiler</h1>
+  <form action="{{ url_for('pagar_alquiler', id_house=casa.id) }}">
+    <div class="rent-info">
+      <ul>
+        <li>
+          <label for="inicio">Fecha de Inicio:</label>
+          <input type="date" id="inicio" name="inicio" required />
+
+          <label for="fin">Fecha de Fin:</label>
+          <input type="date" id="fin" name="fin" required />
+        </li>
+      </ul>
+    </div>
+    <div class="payment-info">
+      <ul>
+        {% for metodo in metodos_pago %}
+        <li>
+          <input
+            type="radio"
+            id="{{ metodo.brand }}"
+            name="metodo_pago"
+            value="{{ metodo.brand }}"
+          />
+          <label for="{{ metodo.brand }}">{{ metodo.brand }} | {{ metodo.card_number }}</label>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <button type="submit" class="btn-pay">Pagar</button>
+  </form>
+
+  {% endblock %}
+</div>

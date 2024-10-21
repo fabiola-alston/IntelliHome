@@ -100,7 +100,7 @@ def registrar_usuario(
         "password": password,
         "nombre": nombre,
         "fecha_nacimiento": fecha_nacimiento,
-        "metodos_pago": forma_pago,
+        "metodos_pago": [forma_pago],
         "foto_perfil": foto_perfil,
         "casas": casas,
     }
@@ -643,56 +643,76 @@ def actualizar_perfil():
         return redirect(url_for("user_dashboard"))
 
 
-@app.route("/alquilar_casa/<int:id>", methods=["POST"])
-def alquilar_casa(id):
-    if "user" not in session:
-        flash("Debes iniciar sesión para alquilar una casa.")
-        return redirect(url_for("home"))
+@app.route("/pagar_alquiler/<int:id_house>", methods=["POST", "GET"])
+def pagar_alquiler(id_house):
+    if request.method == "POST":
+        try:
+            data = {}
+            with open(USERS_FILE, "r+", encoding="utf-8") as f:
+                data = json.load(f)
+            print(data)
 
-    try:
-        with open(USERS_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            # Buscar la casa por ID
+            casa = next((casa for casa in data["casas"] if casa["id"] == id_house), None)
+            if not casa:
+                flash("Casa no encontrada.")
+                return redirect(url_for("explorar"))
 
-        # Buscar la casa por ID
-        casa = next((casa for casa in data["casas"] if casa["id"] == id), None)
-        if not casa:
-            flash("Casa no encontrada.")
+            # Buscar al usuario actual
+            usuario_actual = next(
+                (u for u in data["usuarios"] if u["alias"] == session["user"]), None
+            )
+            if not usuario_actual:
+                flash("Usuario no encontrado.")
+                return redirect(url_for("explorar"))
+
+            # Buscar el método de pago del usuario
+            metodo_pago = next(
+                (
+                    mp
+                    for mp in usuario_actual.get("metodos_pago", [])
+                    if mp["brand"] == "Visca"
+                ),
+                None,
+            )
+            if not metodo_pago:
+                flash("No se encontró un método de pago válido.")
+                return redirect(url_for("user_dashboard"))
+
+            # Verificar si el usuario tiene suficiente saldo
+            if metodo_pago["debt"] >= casa["precio"]:
+                flash("No tienes suficiente saldo para pagar el alquiler.")
+                return redirect(url_for("user_dashboard"))
+
+            # Actualizar el saldo del método de pago
+            metodo_pago["debt"] += casa["precio"]
+
+            # Guardar los cambios en el archivo JSON
+            with open(USERS_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+
+            flash(f"Alquiler pagado exitosamente para la casa: {casa['nombre']}")
+            return redirect(url_for("user_dashboard"))
+
+        except Exception as e:
+            print(f"Error al pagar el alquiler: {e}")
+            flash("Ocurrió un error al pagar el alquiler.")
             return redirect(url_for("explorar"))
 
-        # Verificar si la casa ya está alquilada
-        if casa["inquilinos"]:
-            flash("Esta casa ya está alquilada.")
-            return redirect(url_for("detalles_casa", id=id))
+    data = {}
+    with open(USERS_FILE, "r+", encoding="utf-8") as f:
+        data = json.load(f)
 
-        # Buscar al usuario actual
-        usuario_actual = next(
-            (u for u in data["usuarios"] if u["alias"] == session["user"]), None
-        )
-        if not usuario_actual:
-            flash("Usuario no encontrado.")
-            return redirect(url_for("explorar"))
+    metodos_pago = []
+    usuario_actual = next(
+        (u for u in data["usuarios"] if u["alias"] == session["user"]), None
+    )
+    if usuario_actual:
+        metodos_pago = usuario_actual.get("metodos_pago", [])
 
-        # Agregar la casa a la lista de casas del usuario
-        if "casas" not in usuario_actual:
-            usuario_actual["casas"] = []
-
-
-        usuario_actual["casas"].append(id)  # Usar ID de la casa
-
-        # Agregar al usuario como inquilino de la casa
-        casa["inquilinos"].append(session["user"])
-
-        # Guardar los cambios en el archivo JSON
-        with open(USERS_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
-
-        flash(f"Has alquilado exitosamente la casa: {casa['nombre']}")
-        return redirect(url_for("user_dashboard"))
-
-    except Exception as e:
-        print(f"Error al alquilar la casa: {e}")
-        flash("Ocurrió un error al intentar alquilar la casa.")
-        return redirect(url_for("explorar"))
+    print(metodos_pago)
+    casa = next((casa for casa in data["casas"] if casa["id"] == id_house), None)
+    return render_template("pagar_alquiler.html", id_house=id_house, casa=casa, metodos_pago=metodos_pago)
 
 
 @app.route("/autorizar_inquilino/<int:casa_id>", methods=["POST"])
