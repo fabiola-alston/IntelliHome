@@ -385,7 +385,7 @@ def login():
                 ] 
                 session["nombre"] = usuario["nombre"]
                 session["fecha_nacimiento"] = usuario["fecha_nacimiento"]
-                session["forma_pago"] = usuario["metodos_pago"][0]["brand"]
+                session["forma_pago"] = ""
                 session["email"] = usuario["email"]
                 if is_admin(alias):
                     return redirect(url_for("admin_dashboard"))
@@ -811,7 +811,7 @@ def guardar_info_pago(
                     if "metodos_pago" not in user:
                         user["metodos_pago"] = []
                     user["metodos_pago"].append(
-                        {
+                            {
                             "card_number": card_number,
                             "card_holder": card_holder,
                             "date": date,
@@ -1118,7 +1118,7 @@ def recuperar_contrasena():
             for user in data['usuarios']:
                 if user['email'] == email:
                     # Generar un nuevo código de verificación
-                    new_code = random.randint(3567, 3572)
+                    new_code = random.randint(1000, 10000)
                     # Guardar el código en la sesión
                     session['recovery_code'] = new_code
                     session['expiration'] = datetime.now() + timedelta(minutes=2)
@@ -1135,9 +1135,9 @@ def recuperar_contrasena():
 def validar_codigo():
     if request.method == 'POST':
         code = request.form['code']
-        if int(code) == session.get('recovery_code') and datetime.now() < session.get('expiration'):
+        if int(code) == session.get('recovery_code') and datetime.now() < session['expiration']:
             return redirect(url_for('nueva_contrasena'))
-        elif datetime.now() > session.get('expiration'):
+        elif datetime.now() > session['expiration']:
             flash("El código ha expirado", "error")
         else:
             flash("Código incorrecto", "error")

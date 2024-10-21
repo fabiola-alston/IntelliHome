@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activar o Desactivar Sitio Web</title>
+</head>
+<body>
+    <h2>Activar o Desactivar Sitio Web</h2>
+    <p>Estado actual del sitio web: 
+        {% if app_enabled %}
+            <strong>Habilitado</strong>
+        {% else %}
+            <strong>Deshabilitado</strong>
+        {% endif %}
+    </p>
+    <!-- Opción para habilitar o deshabilitar la aplicación -->
+    <form action="/toggle_website" method="POST">
+        <button type="submit" name="action" value="Habilitar">Habilitar Sitio Web</button>
+        <button type="submit" name="action" value="Deshabilitar">Deshabilitar Sitio Web</button>
+    </form>
+    <br>
+    <a href="/admin">Volver al Panel de Administración</a>
+</body>
+</html>

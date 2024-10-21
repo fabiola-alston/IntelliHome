@@ -3,11 +3,31 @@
         {
             "alias": "Admin",
             "email": "bla@gmail.com",
-            "password": "tec2026*",
+            "password": "tec2027*",
             "nombre": "Admin",
             "fecha_nacimiento": "2024-09-09",
             "forma_pago": "Visca",
             "foto_perfil": "admin.png",
+            "casas": []
+        },
+        {
+            "alias": "usuario",
+            "email": "mhernandezvz@gmail.com",
+            "password": "prueba34A.",
+            "nombre": "Rodrigo Arce",
+            "fecha_nacimiento": "1993-02-21",
+            "metodos_pago": [
+                {
+                    "amount": 0,
+                    "brand": "visca",
+                    "card_holder": "Rodrigo Arce",
+                    "card_number": "1221122112211221",
+                    "date": "08/28",
+                    "debt": 0,
+                    "pin": "255"
+                }
+            ],
+            "foto_perfil": null,
             "casas": []
         }
     ],
@@ -55,7 +75,8 @@
             "forma_pago": "MasterChef",
             "foto_perfil": "rodrigo.20241012195546.cover.jpg",
             "casas": [
-                1
+                1,
+                2
             ],
             "metodos_pago": [
                 {
@@ -66,28 +87,58 @@
                     "brand": "visca",
                     "debt": 0.0,
                     "amount": 0.0
+                },
+                {
+                    "card_number": "2221222122212221",
+                    "card_holder": "Rodrigo Arce",
+                    "date": "01/28",
+                    "pin": "255",
+                    "brand": "masterchef",
+                    "debt": 0.0,
+                    "amount": 0.0
                 }
             ]
         },
         {
-            "alias": "rodrigo2",
-            "email": "r.arce.1@estudiantec.cr",
-            "password": "prueba33A.",
-            "nombre": "Rodrigo Arce",
-            "fecha_nacimiento": "2002-01-01",
+            "alias": "usuario3",
+            "email": "fabiolally06@gmail.com",
+            "password": "aAaAaAaA8*",
+            "nombre": "Fabiola Alston",
+            "fecha_nacimiento": "2001-01-01",
             "metodos_pago": [
                 {
                     "amount": 0,
                     "brand": "visca",
-                    "card_holder": "Rodrigo Arce",
+                    "card_holder": "Fabiola Alston",
+                    "card_number": "1221122112211221",
+                    "date": "01/28",
+                    "debt": 0,
+                    "pin": "255"
+                }
+            ],
+            "foto_perfil": "usuario3.20241021112014.user-icon-profile-icon-account-icon-login-sign-line-vector.jpg",
+            "casas": []
+        },
+        {
+            "alias": "usuario4",
+            "email": "d.garcia.1@estudiantec.cr",
+            "password": "prueba32A.",
+            "nombre": "David Garcia Cruz",
+            "fecha_nacimiento": "2006-11-05",
+            "metodos_pago": [
+                {
+                    "amount": 0,
+                    "brand": "visca",
+                    "card_holder": "David Garcia",
                     "card_number": "1221122112211221",
                     "date": "01/28",
                     "debt": 150000,
                     "pin": "255"
                 }
             ],
-            "foto_perfil": "rodrigo2.20241021005749.ginpachi_sensei_1.jpeg",
+            "foto_perfil": "usuario4.20241021112330.user-icon-profile-icon-account-icon-login-sign-line-vector.jpg",
             "casas": [
+                2
             ]
         }
     ],
@@ -123,6 +174,9 @@
             "imagen": "default/casa.jpeg",
             "calificacion": [],
             "inquilinos": [
+                "usuario4",
+                "usuario4",
+                "rodrigo"
             ]
         }
     ]
