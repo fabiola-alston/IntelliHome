@@ -74,9 +74,6 @@ def leer_usuarios():
     return todos_usuarios
 
 
-# Asegúrate de que esta variable esté definida correctamente
-
-
 # Función para verificar si el alias o correo ya existen
 def alias_o_correo_duplicado(alias, email):
     usuarios = leer_usuarios()
@@ -1057,6 +1054,61 @@ def eliminar_admin():
         file.truncate()
 
     return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/recuperar_contrasena', methods=['POST', 'GET'])
+def recuperar_contrasena():
+    if request.method == 'POST':
+        email = request.form['email']
+        with open('usuarios.json', 'r') as file:
+            data = json.load(file)
+            for user in data['usuarios']:
+                if user['email'] == email:
+                    # Generar un nuevo código de verificación
+                    new_code = random.randint(10000, 99999)
+                    # Guardar el código en la sesión
+                    session['recovery_code'] = new_code
+                    session['recovery_email'] = email
+                    # Enviar el código al correo del usuario
+                    enviar_mensaje(email, new_code)
+                    return redirect(url_for('validar_codigo'))
+            else:
+                flash("Correo no encontrado", "error")
+    return render_template('recuperar_contrasena.html')
+
+
+@app.route('/validar_codigo', methods=['POST', 'GET'])
+def validar_codigo():
+    if request.method == 'POST':
+        code = request.form['code']
+        if int(code) == session.get('recovery_code'):
+            return redirect(url_for('nueva_contrasena'))
+        else:
+            flash("Código incorrecto", "error")
+    return render_template('validar_codigo.html')
+
+
+@app.route('/nueva_contrasena', methods=['POST', 'GET'])
+def nueva_contrasena():
+    if request.method == 'POST':
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        if password == confirm_password:
+            with open('usuarios.json', 'r+') as file:
+                data = json.load(file)
+                for user in data['usuarios']:
+                    if user['email'] == session.get('recovery_email'):
+                        user['password'] = password
+                        file.seek(0)
+                        json.dump(data, file, indent=4)
+                        file.truncate()
+                        flash("Contraseña actualizada", "success")
+                        return redirect(url_for('home'))
+                else:
+                    flash("Correo no encontrado", "error")
+        else:
+            flash("Las contraseñas no coinciden", "error")
+    return render_template('nueva_contrasena.html')
 
 
 if __name__ == "__main__":

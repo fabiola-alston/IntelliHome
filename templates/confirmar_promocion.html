@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar promoción{% endblock %}
+
+{% block content %}
+    <h1>Confirmar promoción</h1>
+    <p>¿Estás seguro de que deseas promocionarte como administrador, "{{ alias }}"?</p>
+    <form action="{{url_for('confirmar_promocion')}}" method="POST">
+      <ul>
+        <li>
+          <label for="alias">Alias del usuario: </label>
+          <input type="text" id="alias" name="alias" value="{{ alias }}" required><br>
+          <button type="submit">Sí, promocionar</button>
+        </li>
+      </ul>
+    </form>
+{% endblock %}
