@@ -650,10 +650,10 @@ def pagar_alquiler(id_house):
             data = {}
             with open(USERS_FILE, "r+", encoding="utf-8") as f:
                 data = json.load(f)
-            print(data)
 
             # Buscar la casa por ID
             casa = next((casa for casa in data["casas"] if casa["id"] == id_house), None)
+            print(casa)
             if not casa:
                 flash("Casa no encontrada.")
                 return redirect(url_for("explorar"))
@@ -662,6 +662,7 @@ def pagar_alquiler(id_house):
             usuario_actual = next(
                 (u for u in data["usuarios"] if u["alias"] == session["user"]), None
             )
+            print(usuario_actual)
             if not usuario_actual:
                 flash("Usuario no encontrado.")
                 return redirect(url_for("explorar"))
@@ -671,7 +672,7 @@ def pagar_alquiler(id_house):
                 (
                     mp
                     for mp in usuario_actual.get("metodos_pago", [])
-                    if mp["brand"] == "Visca"
+                    if mp["brand"] == request.form["metodo_pago"]
                 ),
                 None,
             )
@@ -679,14 +680,28 @@ def pagar_alquiler(id_house):
                 flash("No se encontró un método de pago válido.")
                 return redirect(url_for("user_dashboard"))
 
+            print(metodo_pago)
+
             # Verificar si el usuario tiene suficiente saldo
             if metodo_pago["debt"] >= casa["precio"]:
                 flash("No tienes suficiente saldo para pagar el alquiler.")
                 return redirect(url_for("user_dashboard"))
 
-            # Actualizar el saldo del método de pago
-            metodo_pago["debt"] += casa["precio"]
+            for usuario in data["usuarios"]:
+                if usuario["alias"] == session["user"]:
+                    for metodo_pago in usuario["metodos_pago"]:
+                        if metodo_pago["brand"] == request.form["metodo_pago"]:
+                            metodo_pago["debt"] += casa["precio"]
+                            break
+                    if id_house not in usuario["casas"]:
+                        usuario["casas"].append(id_house)
 
+            casa["inquilinos"].append(session["user"])
+            print(casa)
+            for casa in data["casas"]:
+                if casa["id"] == id_house:
+                    casa["inquilinos"].append(session["user"])
+                    break 
             # Guardar los cambios en el archivo JSON
             with open(USERS_FILE, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)

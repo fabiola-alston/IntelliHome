@@ -8,7 +8,7 @@ head %}
 
 <div class="payment-container">
   <h1>Pagar Alquiler</h1>
-  <form action="{{ url_for('pagar_alquiler', id_house=casa.id) }}">
+  <form action="{{ url_for('pagar_alquiler', id_house=casa.id) }}" method="POST">
     <div class="rent-info">
       <ul>
         <li>

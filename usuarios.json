@@ -75,17 +75,20 @@
             "password": "prueba33A.",
             "nombre": "Rodrigo Arce",
             "fecha_nacimiento": "2002-01-01",
-            "metodos_pago": [{
-                "amount": 0,
-                "brand": "visca",
-                "card_holder": "Rodrigo Arce",
-                "card_number": "1221122112211221",
-                "date": "01/28",
-                "debt": 0,
-                "pin": "255"
-            }],
+            "metodos_pago": [
+                {
+                    "amount": 0,
+                    "brand": "visca",
+                    "card_holder": "Rodrigo Arce",
+                    "card_number": "1221122112211221",
+                    "date": "01/28",
+                    "debt": 150000,
+                    "pin": "255"
+                }
+            ],
             "foto_perfil": "rodrigo2.20241021005749.ginpachi_sensei_1.jpeg",
-            "casas": []
+            "casas": [
+            ]
         }
     ],
     "casas": [
@@ -119,7 +122,8 @@
             "precio": 150000,
             "imagen": "default/casa.jpeg",
             "calificacion": [],
-            "inquilinos": []
+            "inquilinos": [
+            ]
         }
     ]
 }
