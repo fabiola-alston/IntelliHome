@@ -68,6 +68,25 @@
         <!-- Botón para agregar nueva casa -->
         <button id="add-house-btn">Agregar Nueva Casa</button>
 
+        <!-- Boton para promocionar usuario a administrador -->
+        <h2>Promocionar usuario a administrador</h2>
+        <form action="{{ url_for('promocionar') }}" method="POST">
+          <ul>
+            <li>
+              <label for="alias">Alias del usuario</label>
+              <input type="text" id="alias" name="alias" required><br>
+              <button type="submit">Promocionar a Administrador</button>
+            </li>
+          </ul>
+        </form>
+  
+        <h2>Eliminar administrador</h2>
+        <form action="/eliminar_admin" method="POST">
+          <label for="alias">Alias del usuario</label>
+          <input type="text" id="alias" name="alias" required> <br>
+          <button type="submit">Eliminar Administrador</button>
+        </form>
+
         <!-- Formulario para agregar nueva casa -->
         <div id="add-house" style="display: none;">
             <h2>Agregar Nueva Casa</h2>

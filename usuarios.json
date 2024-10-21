@@ -9,19 +9,6 @@
             "forma_pago": "Visca",
             "foto_perfil": "admin.png",
             "casas": []
-        }
-    ],
-    "usuarios": [
-        {
-            "alias": "User",
-            "email": "blabla@gmail.com",
-            "password": "CE2024",
-            "nombre": "User",
-            "fecha_nacimiento": "2027-09-09",
-            "forma_pago": "Visca",
-            "foto_perfil": "user.png",
-            "casas": [],
-            "metodos_pago": []
         },
         {
             "alias": "rodrigo",
@@ -45,6 +32,19 @@
                     "amount": 0.0
                 }
             ]
+        }
+    ],
+    "usuarios": [
+        {
+            "alias": "User",
+            "email": "blabla@gmail.com",
+            "password": "CE2024",
+            "nombre": "User",
+            "fecha_nacimiento": "2027-09-09",
+            "forma_pago": "Visca",
+            "foto_perfil": "user.png",
+            "casas": [],
+            "metodos_pago": []
         },
         {
             "alias": "aaron",
@@ -96,8 +96,8 @@
         },
         {
             "id": 2,
-            "nombre": "Apartamento Céntrico",
-            "ubicacion": "Ciudad de México",
+            "nombre": "Apartamento C\u00e9ntrico",
+            "ubicacion": "Ciudad de M\u00e9xico",
             "precio": 150000,
             "imagen": "default/casa.jpeg",
             "calificacion": [],

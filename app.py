@@ -8,7 +8,6 @@ from flask import (
     flash,
     jsonify,
 )
-from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import re
 import random
@@ -166,7 +165,7 @@ def validacion_contrasena(password):
 
 
 # Función para enviar un correo electrónico con el código de verificación
-def enviar_codigo(email, codigo, message=None):
+def enviar_mensaje(email, codigo, message=None):
     sender_email = "intellihome.playitaiguana@gmail.com"
     sender_password = "feum sttx vaqc peip"
 
@@ -288,7 +287,7 @@ def register():
         session["codigo_expiracion"] = datetime.now(timezone.utc) + timedelta(minutes=2)
         session["intentos"] = 1  # Se permite un intento extra
 
-        enviar_codigo(email, session["codigo"])
+        enviar_mensaje(email, session["codigo"])
 
         return redirect(url_for("validar_correo"))
     return render_template("register.html")
@@ -312,7 +311,7 @@ def validar_correo():
                 session["codigo_expiracion"] = datetime.now(timezone.utc) + timedelta(
                     minutes=2
                 )
-                enviar_codigo(session["email"], session["codigo"])
+                enviar_mensaje(session["email"], session["codigo"])
                 session["intentos"] += 1
             else:
                 error_message = "El código ha expirado y ya no tienes más intentos."
@@ -599,7 +598,7 @@ def actualizar_perfil():
                     new_password = request.form["password"]
                     if new_password:
                         if new_password == request.form["confirm_password"]:
-                            usuario["password"] = generate_password_hash(new_password)
+                            usuario["password"] = new_password
                         else:
                             flash("Las contraseñas no coinciden")
                             return redirect(url_for("user_dashboard"))
@@ -887,11 +886,9 @@ def add_house():
     other_features = request.form['other-features']
     address = request.form['address']
     coordinates = request.form['coordinates']
-    
     # Manejo de la carga de fotos
     photos = request.files.getlist('photos')
     photo_paths = []
-    
     for photo in photos:
         if photo:
             photo_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
@@ -903,11 +900,12 @@ def add_house():
         data = json.load(file)
         new_house = {
             "id": len(data['casas']) + 1,  # Asignar un nuevo ID
-            "nombre": address,  # Puedes cambiar esto según tu lógica
+            "nombre": address, 
             "ubicacion": address,
-            "precio": 0,  # Asigna un precio por defecto o agrega un campo en el formulario
+            "precio": 0,  
             "calificacion": [],
-            "imagen": photo_paths,  # Guarda las rutas de las imágenes
+            "imagen": photo_paths[0],  # Guarda las rutas de las imágenes
+            "imagenes": photo_paths,
             "inquilinos": [],
             "capacidad": capacity,
             "habitaciones": rooms,
@@ -958,6 +956,100 @@ def set_available(house_id):
         file.truncate()
     flash("La casa ha sido marcada como disponible.", "success")
     return redirect(url_for('list_inactive_houses'))  # Redirigir a la lista de casas inactivas
+
+
+def is_admin(user):
+    with open('usuarios.json', 'r') as file:
+        data = json.load(file)
+    return user in [admin['alias'] for admin in data['administradores']]
+
+
+@app.route('/promocionar', methods=['POST'])
+def promocionar():
+    if not is_admin(session.get('user')):
+        return redirect(url_for('home'))
+
+    if request.method == 'POST':
+        alias = request.form['alias']
+        user_data = {}
+        user_email = ""
+        with open('usuarios.json', 'r+') as file:
+            data = json.load(file)
+            for user in data['usuarios']:
+                if user['alias'] == alias:
+                    user_data = user
+                    break
+
+            user_email = user_data['email']
+            session['promocionando'] = True
+
+            # Enviar un correo al usuario para confirmar la promoción
+            enviar_mensaje(
+                user_email,
+                0,
+                message= f"""
+¡Felicidades! Has sido promocionado a administrador.
+Confirma la promocion entrando al siguiente link: http://localhost:5000/confirmar_promocion
+                """
+            )
+        return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/confirmar_promocion', methods=['POST', 'GET'])
+def confirmar_promocion():
+    """
+    Esta ruta la abre al usuario. En la funcion promocionar, se le 
+    envia un link a esta ruta para que el usuario confirme su promocion.
+    Muestra un mensaje de exito si el usuario confirma su promocion.
+    """
+    if is_admin(session.get('user')) or not session.get('promocionando'):
+        return redirect(url_for('home'))
+
+    if request.method == 'POST':
+        user_data = {}
+        user_alias = request.form['alias']
+
+        with open('usuarios.json', 'r+') as file:
+            data = json.load(file)
+            for user in data['usuarios']:
+                if user['alias'] == user_alias:
+                    user_data = user
+                    break
+
+            data["administradores"].append(user_data)
+            del data["usuarios"][data["usuarios"].index(user_data)]
+            file.seek(0)
+            json.dump(data, file, indent=4)
+            file.truncate()
+
+        return redirect(url_for('promocion_confirmada'))
+
+    if request.method == 'GET':
+        return render_template('confirmar_promocion.html', alias=session.get('user'))
+
+
+@app.route('/promocion_confirmada', methods=['POST', 'GET'])
+def promocion_confirmada():
+    flash("¡Felicidades! Has sido promocionado a administrador.", "success")
+    return redirect(url_for('user_dashboard'))
+
+
+@app.route('/eliminar_admin', methods=['POST', 'GET'])
+def eliminar_admin():
+    alias = request.form['alias']
+    user_data = {}
+    with open('usuarios.json', 'r+') as file:
+        data = json.load(file)
+        for user in data['administradores']:
+            if user['alias'] == alias:
+                user_data = user
+                break
+
+        data["usuarios"].append(user_data)
+        del data["administradores"][data["administradores"].index(user_data)]
+        file.seek(0)
+        json.dump(data, file, indent=4)
+        file.truncate()
 
 
 if __name__ == "__main__":
