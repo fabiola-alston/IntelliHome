@@ -1089,6 +1089,8 @@ def validar_codigo():
         code = request.form['code']
         if int(code) == session.get('recovery_code') and datetime.now() < session.get('expiration'):
             return redirect(url_for('nueva_contrasena'))
+        elif datetime.now() > session.get('expiration'):
+            flash("El código ha expirado", "error")
         else:
             flash("Código incorrecto", "error")
     return render_template('validar_codigo.html')
