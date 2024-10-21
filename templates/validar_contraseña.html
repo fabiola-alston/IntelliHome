@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validar Contraseña</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/validar_contraseña.css') }}">
+</head>
+<body>
+    <div class="password-validation-container">
+        <h2>Ingresa tu Contraseña</h2>
+        {% if error_message %}
+        <h3 class="error-message">{{ error_message }}</h3>
+        {% endif %}
+        <form action="/validar_contraseña" method="POST">
+            <div class="input-group">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Validar Contraseña</button>
+        </form>
+    </div>
+</body>
+</html>

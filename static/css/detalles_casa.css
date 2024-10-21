@@ -1,0 +1,84 @@
+.house-details-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.house-image {
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%; /* Esto mantiene una relación de aspecto 16:9 */
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.house-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.house-info {
+    margin-top: 20px;
+}
+
+.house-info p {
+    margin: 10px 0;
+    font-size: 18px;
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.btn-back {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.btn-back:hover {
+    background-color: #e0e0e0;
+}
+
+.btn-rent {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.btn-rent:hover {
+    background-color: #45a049;
+}
+
+.btn-rented {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+    .button-group {
+        flex-direction: column;
+    }
+
+    .btn {
+        margin-bottom: 10px;
+        text-align: center;
+    }
+}

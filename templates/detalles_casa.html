@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Detalles de la Casa{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/detalles_casa.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="house-details-container">
+    <h1>{{ casa.nombre }}</h1>
+    <div class="house-image">
+        <img src="{{ url_for('static', filename=casa.imagen) }}" alt="{{ casa.nombre }}">
+    </div>
+    <div class="house-info">
+        <p><strong>Ubicación:</strong> {{ casa.ubicacion }}</p>
+        <p><strong>Precio:</strong> ${{ casa.precio }}</p>
+    </div>
+    <div class="button-group">
+        <a href="{{ url_for('explorar') }}" class="btn btn-back">Volver a Explorar</a>
+        {% if casa.inquilinos|length == 0 %}
+            <a href="{{ url_for('alquilar_casa', id=casa.id) }}" class="btn btn-rent">Alquilar</a>
+        {% else %}
+            <span class="btn btn-rented">Ya está alquilada</span>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Agregar Método de Pago{% endblock %}
+
+{% block content %}
+    <div class="add-payment-container">
+        <h1>Agregar Método de Pago</h1>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash-message danger">
+                        <strong>PELIGRO:</strong> {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form action="{{ url_for('agregar_pago') }}" method="POST">
+            <ul>
+                <li>
+                    <label for="brand">Tipo de tarjeta:</label>
+                    <select id="brand" name="brand" required>
+                        <option value="visca">Visca</option>
+                        <option value="masterchef">Masterchef</option>
+                        <option value="americancity">AmericanCity</option>
+                        <option value="ticapay">TicaPay</option>
+                    </select>
+                </li>
+                <li>
+                    <label for="card_number">Número de tarjeta:</label>
+                    <input type="text" id="card_number" name="card_number" required>
+                </li>
+                <li>
+                    <label for="card_holder">Nombre del titular:</label>
+                    <input type="text" id="card_holder" name="card_holder" required>
+                </li>
+                <li>
+                    <label for="month">Mes de vencimiento:</label>
+                    <input type="text" id="month" name="month" required>
+                </li>
+                <li>
+                    <label for="year">Año de vencimiento:</label>
+                    <input type="text" id="year" name="year" required>
+                </li>
+                <li>
+                    <label for="pin">PIN:</label>
+                    <input type="password" id="pin" name="pin" required>
+                </li>
+            </ul>
+            <button type="submit">Agregar Método de Pago</button>
+            <button type="button" onclick="location.href='{{ url_for('perfil') }}'">Cancelar</button>  <!-- Cambia 'user_profile' por la ruta correcta si es necesario -->
+        </form>
+    </div>
+{% endblock %}

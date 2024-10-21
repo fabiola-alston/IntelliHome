@@ -1,0 +1,95 @@
+{
+    "administradores": [
+        {
+            "alias": "Admin",
+            "email": "bla@gmail.com",
+            "password": "TEC2026*",
+            "nombre": "Admin",
+            "fecha_nacimiento": "2024-09-09",
+            "forma_pago": "Visca",
+            "foto_perfil": "admin.png",
+            "casas": []
+        }
+    ],
+    "usuarios": [
+        {
+            "alias": "User",
+            "email": "blabla@gmail.com",
+            "password": "CE2024",
+            "nombre": "User",
+            "fecha_nacimiento": "2027-09-09",
+            "forma_pago": "Visca",
+            "foto_perfil": "user.png",
+            "casas": []
+        },
+        {
+            "alias": "rodrigo",
+            "email": "roarba011@gmail.com",
+            "password": "prueba32A.",
+            "nombre": "Rodrigo Arce",
+            "fecha_nacimiento": "0707-07-07",
+            "forma_pago": "MasterChef",
+            "foto_perfil": "rodrigo.20241012195546.cover.jpg",
+            "casas": [
+                1
+            ],
+            "metodos_pago": [
+                {
+                    "card_number": "1221122112211221",
+                    "card_holder": "Rodrigo",
+                    "date": "12/28",
+                    "pin": "255",
+                    "brand": "visca",
+                    "debt": 0.0,
+                    "amount": 0.0
+                }
+            ]
+        },
+        {
+            "alias": "aaron",
+            "email": "lvoidiss@gmail.com",
+            "password": "dognigga1971A.",
+            "nombre": "Rodrigo Arce",
+            "fecha_nacimiento": "2006-01-07",
+            "forma_pago": "Visca",
+            "foto_perfil": "aaron.20241012202619.cover.jpg",
+            "casas": [
+                1
+            ]
+        }
+    ],
+    "casas": [
+        {
+            "id": 1,
+            "nombre": "Casa de Playa",
+            "ubicacion": "Playa del Carmen",
+            "precio": 250000,
+            "calificacion": [
+                {
+                    "usuario": "rodrigo",
+                    "rating": 5,
+                    "comentario": "Excelente lugar para vacacionar"
+                },
+                {
+                    "usuario": "aaron",
+                    "rating": 4,
+                    "comentario": "Muy bonita casa, pero le falta mantenimiento"
+                }
+            ],
+            "imagen": "default/casa.jpeg",
+            "inquilinos": [
+                "rodrigo",
+                "aaron"
+            ]
+        },
+        {
+            "id": 2,
+            "nombre": "Apartamento C\u00e9ntrico",
+            "ubicacion": "Ciudad de M\u00e9xico",
+            "precio": 150000,
+            "imagen": "default/casa.jpeg",
+            "calificacion": [],
+            "inqUilinos": []
+        }
+    ]
+}

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validar Correo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/validar_correo.css') }}">
+</head>
+<body>
+    <div class="validation-container">
+        <h2>Validación del Código</h2>
+        {% if error_message %}
+        <div class="error-message">
+            <p>{{ error_message }}</p>
+        </div>
+        {% endif %}
+        <p>Se ha enviado un código a tu correo. Por favor, ingrésalo a continuación:</p>
+        <p class="warning"><strong>Tienes 2 minutos para ingresar el código. Si el código expira, puedes solicitar uno nuevo solo una vez.</strong></p>
+        <form action="/validar_correo" method="POST">
+            <div class="input-group">
+                <label for="codigo">Código de Verificación:</label>
+                <input type="text" id="codigo" name="codigo" required>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn-validate">Validar</button>
+                <a href="{{ url_for('home') }}" class="btn-cancel">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

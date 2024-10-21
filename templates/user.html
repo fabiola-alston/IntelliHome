@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil de Usuario{% endblock %}
+
+{% block content %}
+    <div class="profile-container">
+        <h1>Bienvenido, {{ session['alias'] }}</h1>
+        <div id="profile-display">
+            <ul class="profile-info">
+                <li>
+                    {% if session['foto_perfil'] %}
+                        <img src="{{ url_for('static', filename='uploads/' + session['foto_perfil']) }}" alt="Foto de Perfil" class="profile-picture" />
+                    {% else %}
+                        <img src="{{ url_for('static', filename='uploads/default_profile.png') }}" alt="Foto de Perfil" class="profile-picture" />
+                    {% endif %}
+                </li>
+                <li><b>Nombre:</b> {{ session['nombre'] }}</li>
+                <li><b>Alias:</b> {{ session['alias'] }}</li>
+                <li><b>Fecha de nacimiento:</b> {{ session['fecha_nacimiento'] }}</li>
+            </ul>
+            <button onclick="toggleEditForm()">Editar Perfil</button>
+            <button onclick="location.href='{{ url_for('agregar_pago') }}'">Agregar método de pago</button>
+        </div>
+
+        <form id="edit-form" action="{{ url_for('actualizar_perfil') }}" method="POST" enctype="multipart/form-data" style="display: none;">
+            <ul class="profile-info">
+                <li>
+                    <label for="foto_perfil">Foto de Perfil:</label>
+                    <input type="file" id="foto_perfil" name="foto_perfil" accept="image/*">
+                </li>
+                <li>
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" id="nombre" name="nombre" value="{{ session['nombre'] }}" required>
+                </li>
+                <li>
+                    <label for="alias">Alias:</label>
+                    <input type="text" id="alias" name="alias" value="{{ session['alias'] }}" required>
+                </li>
+                <li>
+                    <label for="fecha_nacimiento">Fecha de nacimiento:</label>
+                    <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" value="{{ session['fecha_nacimiento'] }}" required>
+                </li>
+                <li>
+                    <label for="password">Nueva contraseña:</label>
+                    <input type="password" id="password" name="password" placeholder="Dejar en blanco para no cambiar">
+                </li>
+                <li>
+                    <label for="confirm_password">Confirmar nueva contraseña:</label>
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirmar nueva contraseña">
+                </li>
+            </ul>
+            <button type="submit">Actualizar Perfil</button>
+            <button type="button" onclick="toggleEditForm()">Cancelar</button>
+        </form>
+    </div>
+
+    <div class="houses-container">
+        <h1>Mis casas</h1>
+        {% for casa in casas %}
+            <div class="house-card">
+                <div class="house-image">
+                    <img src="{{ url_for('static', filename=casa.imagen) }}" alt="Foto de la casa">
+                </div>
+                <div class="house-details">
+                    <h2>{{ casa.nombre }}</h2>
+                    <p><strong>Ubicación:</strong> {{ casa.ubicacion }}</p>
+                    <p><strong>Precio:</strong> ${{ casa.precio }}</p>
+                    <p><strong>Inquilinos:</strong> {{ casa.inquilinos|join(', ') }}</p>
+                </div>
+                <button class="btn-authorize" onclick="toggleAuthorizeForm('{{ casa.id }}')">Autorizar inquilino</button>
+                <form id="authorize-form-{{ casa.id }}" class="authorize-form" style="display: none;" onsubmit="return autorizarInquilino('{{ casa.id }}')">
+                    <input type="text" id="nuevo-inquilino-{{ casa.id }}" placeholder="Alias del nuevo inquilino" required>
+                    <button type="submit">Autorizar</button>
+                </form>
+                <p id="error-message-{{ casa.id }}" class="error-message" style="display: none;"></p>
+            </div>
+        {% endfor %}
+        {% if not casas %}
+            <p><i><b>No tienes casas registradas.</b></i></p>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleEditForm() {
+            var displayElement = document.getElementById('profile-display');
+            var formElement = document.getElementById('edit-form');
+            if (formElement.style.display === 'none') {
+                displayElement.style.display = 'none';
+                formElement.style.display = 'block';
+            } else {
+                displayElement.style.display = 'block';
+                formElement.style.display = 'none';
+            }
+        }
+
+        function toggleAuthorizeForm(casaId) {
+            var form = document.getElementById('authorize-form-' + casaId);
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function autorizarInquilino(casaId) {
+            var nuevoInquilino = document.getElementById('nuevo-inquilino-' + casaId).value;
+            var errorMessage = document.getElementById('error-message-' + casaId);
+
+            fetch("{{ url_for('autorizar_inquilino', casa_id=0) }}".replace('0', casaId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'nuevo_inquilino=' + encodeURIComponent(nuevoInquilino)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    errorMessage.textContent = data.error;
+                    errorMessage.style.display = 'block';
+                } else {
+                    location.reload(); // Recarga la página para mostrar los cambios
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                errorMessage.textContent = 'Ocurrió un error al procesar la solicitud.';
+                errorMessage.style.display = 'block';
+            });
+
+            return false; // Previene el envío del formulario
+        }
+    </script>
+{% endblock %}
