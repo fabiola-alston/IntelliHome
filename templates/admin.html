@@ -6,119 +6,148 @@
     <title>Panel de Administración</title>
 
     <!-- Estilos CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <style>
-        /* Estilos para el header sticky (fijo) */
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background-color: #333;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            box-shadow: 0px 4px 2px -2px gray;
-            z-index: 1000;
+        /* Estilos para los campos de entrada */
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%; /* Ancho completo */
+            max-width: 400px; /* Ancho máximo */
+            padding: 10px; /* Espaciado interno */
+            margin-bottom: 15px; /* Espaciado inferior */
+            border: 1px solid #ccc; /* Borde */
+            border-radius: 4px; /* Bordes redondeados */
+            box-sizing: border-box; /* Incluye padding y border en el ancho total */
         }
 
-        header a {
-            color: white;
-            text-decoration: none;
-            margin: 0 15px;
-            font-size: 16px;
+        textarea {
+            min-height: 100px; /* Altura mínima */
+            overflow: auto; /* Muestra barra de desplazamiento si es necesario */
         }
 
-        header .menu-left, header .menu-right {
-            display: flex;
-            align-items: center;
-        }
-
-        /* Estilos para los enlaces del menú */
-        header a:hover {
-            text-decoration: underline;
-        }
-
-        /* Espaciado para que el contenido no quede cubierto por el header */
-        .content {
-            margin-top: 70px;
-        }
-
-        /* Alineación de texto e imagen en el menú */
-        .menu-right a img {
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            margin-left: 10px;
-        }
-
-        /* Estilo para el mensaje de advertencia (sticky en la parte inferior izquierda) */
-        .warning-message {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            background-color: #ffcccb;
-            color: #a94442;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-        }
-
-        .warning-message a {
-            color: #a94442;
-            font-weight: bold;
-            text-decoration: none;
-        }
-
-        /* Estilo para el menú de navegación que permanece visible */
-        .menu-left {
-            position: sticky;
-            top: 0;
-            background-color: #333;
-            padding: 10px;
-            width: 100%;
-            z-index: 1000;
-        }
-
-        /* Estilo para cuando el contenido se desplaza */
-        .scrollable-content {
-            margin-top: 100px;
+        .flash-message {
+            color: green; /* Color del mensaje de éxito */
+            margin-bottom: 15px; /* Espaciado inferior */
         }
     </style>
 </head>
 <body>
 
     <!-- Header sticky -->
-    <header>
-        <!-- Menú izquierda -->
-        <div class="menu-left">
-            <a href="/toggle_website">Activar/Desactivar Website</a>
-        </div>
-
-        <!-- Menú derecha -->
-        <div class="menu-right">
-            <a href="/perfil">
-                <img src="{{ url_for('static', filename='default/admin.png') }}" alt="Foto de perfil">
+    <header class="navbar">
+        <ul>
+            <li><a href="/toggle_website">Activar/Desactivar Website</a></li>
+            <li><a href="/perfil">
+                <img src="{{ url_for('static', filename='default/admin.png') }}" alt="Foto de perfil" class="profile-picture">
                 Perfil
-            </a>
-            <a href="/logout" style="margin-left: 20px;">Cerrar Sesión</a>
-        </div>
+            </a></li>
+            <li><a href="/logout">Cerrar Sesión</a></li>
+        </ul>
     </header>
 
-    <!-- Mensaje de advertencia sticky en la parte inferior izquierda -->
     {% if mostrar_mensaje %}
-    <div class="warning-message">
+    <div class="flash-message error">
         Es hora de cambiar su contraseña por defecto. <a href="/actualizar_contraseña">Actualizar Contraseña</a>
     </div>
     {% endif %}
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <!-- Contenido principal -->
-    <div class="scrollable-content">
-        <h2>Bienvenido al Panel de Administración, {{ user }}</h2>
+    <div class="houses-container">
+        <h1>Bienvenido al Panel de Administración, {{ user }}</h1>
         <p>Este es el panel donde los administradores pueden gestionar usuarios y realizar otras tareas administrativas.</p>
+
+        <!-- Botón para agregar nueva casa -->
+        <button id="add-house-btn">Agregar Nueva Casa</button>
+
+        <!-- Formulario para agregar nueva casa -->
+        <div id="add-house" style="display: none;">
+            <h2>Agregar Nueva Casa</h2>
+            <form id="new-house-form" action="/add_house" method="post" enctype="multipart/form-data">
+                <label for="capacity">Capacidad:</label>
+                <input type="number" id="capacity" name="capacity" required><br>
+
+                <label for="rooms">Cantidad de Habitaciones:</label>
+                <input type="number" id="rooms" name="rooms" required><br>
+
+                <label for="bathrooms">Cantidad de Baños:</label>
+                <input type="number" id="bathrooms" name="bathrooms" required><br>
+
+                <label for="amenities">Amenidades:</label>
+                <textarea id="amenities" name="amenities" required></textarea><br>
+
+                <label for="features">Características Generales:</label>
+                <textarea id="features" name="features" required></textarea><br>
+
+                <label for="other-features">Otras Características:</label>
+                <textarea id="other-features" name="other-features"></textarea><br>
+
+                <label for="address">Dirección:</label>
+                <input type="text" id="address" name="address" required><br>
+
+                <label for="coordinates">Coordenadas:</label>
+                <input type="text" id="coordinates" name="coordinates" required placeholder="Ejemplo: -34.397, 150.644"><br>
+
+                <label for="photos">Cargar Fotografías (mínimo 3):</label>
+                <input type="file" id="photos" name="photos" accept="image/*" multiple required><br>
+
+                <!-- Nuevos campos para los planes de pago -->
+                <h3>Planes de Pago</h3>
+                <label for="monthly_with_services">Cuota Mensual (con servicios):</label>
+                <input type="number" id="monthly_with_services" name="monthly_with_services" required><br>
+
+                <label for="monthly_without_services">Cuota Mensual (sin servicios):</label>
+                <input type="number" id="monthly_without_services" name="monthly_without_services" required><br>
+
+                <label for="daily_with_services">Cuota Diaria (con servicios):</label>
+                <input type="number" id="daily_with_services" name="daily_with_services" required><br>
+
+                <button type="submit">Agregar Casa</button>
+            </form>
+        </div>
+
+        <!-- Sección para listar casas inactivas -->
+        <h2>Casas Inactivas</h2>
+        <div id="inactive-houses">
+            <ul>
+                {% for house in inactive_houses %}
+                <li>
+                    {{ house.nombre }} - <button onclick="confirmAvailability('{{ house.id }}')">Hacer Disponible</button>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
+
+    <footer>
+        <p>&copy; 2023 Tu Empresa. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        document.getElementById("add-house-btn").addEventListener("click", function() {
+            document.getElementById("add-house").style.display = "block";
+        });
+
+        document.getElementById("new-house-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            // Aquí puedes agregar la lógica para enviar el formulario al backend
+        });
+
+        function confirmAvailability(houseId) {
+            if (confirm("¿Estás seguro de que deseas hacer esta casa disponible?")) {
+                // Redirigir a la ruta para cambiar el estado de la casa
+                window.location.href = "/set_available/" + houseId;
+            }
+        }
+    </script>
 
 </body>
 </html>

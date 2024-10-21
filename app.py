@@ -423,6 +423,7 @@ def actualizar_contrasena():
     return render_template("cambiar_contraseña.html")
 
 
+
 # Función para actualizar la contraseña del usuario en el archivo
 def actualizar_contraseña_usuario(alias, nueva_contraseña):
     try:
@@ -871,7 +872,93 @@ def agregar_pago():
     return render_template('agregar_pago.html')
 
 
+@app.route('/add_house', methods=['POST'])
+def add_house():
+    # Obtener datos del formulario
+    capacity = request.form['capacity']
+    rooms = request.form['rooms']
+    bathrooms = request.form['bathrooms']
+    amenities = request.form['amenities']
+    features = request.form['features']
+    other_features = request.form['other-features']
+    address = request.form['address']
+    coordinates = request.form['coordinates']
+    
+    # Manejo de la carga de fotos
+    photos = request.files.getlist('photos')
+    photo_paths = []
+    
+    for photo in photos:
+        if photo:
+            photo_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
+            photo.save(photo_path)
+            photo_paths.append(photo_path)
 
+    # Cargar datos en el archivo JSON
+    with open('usuarios.json', 'r+') as file:
+        data = json.load(file)
+        new_house = {
+            "id": len(data['casas']) + 1,  # Asignar un nuevo ID
+            "nombre": address,  # Puedes cambiar esto según tu lógica
+            "ubicacion": address,
+            "precio": 0,  # Asigna un precio por defecto o agrega un campo en el formulario
+            "calificacion": [],
+            "imagen": photo_paths,  # Guarda las rutas de las imágenes
+            "inquilinos": [],
+            "capacidad": capacity,
+            "habitaciones": rooms,
+            "banos": bathrooms,
+            "amenidades": amenities,
+            "caracteristicas_generales": features,
+            "otras_caracteristicas": other_features,
+            "coordenadas": coordinates
+        }
+        data['casas'].append(new_house)
+        file.seek(0)
+        json.dump(data, file, indent=4)
+        file.truncate()
+
+    return jsonify({"message": "Casa agregada exitosamente!"}), 201
+
+
+@app.route('/casas')
+def casas():
+    with open('usuarios.json', 'r') as file:
+        data = json.load(file)
+    return render_template('casas.html', casas=data['casas'])
+
+
+# Cambia el nombre de la función para evitar conflictos
+@app.route('/inactive_houses')
+def list_inactive_houses():
+    with open('usuarios.json', 'r') as file:
+        data = json.load(file)
+    
+    # Filtrar casas inactivas
+    inactive_houses = [house for house in data['casas'] if not house.get('disponible', True)]
+    
+    return render_template('admin.html', inactive_houses=inactive_houses)
+
+
+# Ruta para cambiar el estado de la casa a disponible
+@app.route('/set_available/<int:house_id>', methods=['GET'])
+def set_available(house_id):
+    with open('usuarios.json', 'r+') as file:
+        data = json.load(file)
+        
+        # Buscar la casa por ID y cambiar su estado
+        for house in data['casas']:
+            if house['id'] == house_id:
+                house['disponible'] = True  # Cambiar el estado a disponible
+                break
+        
+        # Guardar los cambios en el archivo JSON
+        file.seek(0)
+        json.dump(data, file, indent=4)
+        file.truncate()
+    
+    flash("La casa ha sido marcada como disponible.", "success")
+    return redirect(url_for('list_inactive_houses'))  # Redirigir a la lista de casas inactivas
 
 
 if __name__ == "__main__":

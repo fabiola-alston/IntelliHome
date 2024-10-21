@@ -3,7 +3,7 @@
         {
             "alias": "Admin",
             "email": "bla@gmail.com",
-            "password": "TEC2026*",
+            "password": "tec2026*",
             "nombre": "Admin",
             "fecha_nacimiento": "2024-09-09",
             "forma_pago": "Visca",
@@ -84,8 +84,8 @@
         },
         {
             "id": 2,
-            "nombre": "Apartamento C\u00e9ntrico",
-            "ubicacion": "Ciudad de M\u00e9xico",
+            "nombre": "Apartamento Céntrico",
+            "ubicacion": "Ciudad de México",
             "precio": 150000,
             "imagen": "default/casa.jpeg",
             "calificacion": [],
