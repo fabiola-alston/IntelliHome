@@ -1073,6 +1073,7 @@ def recuperar_contrasena():
                     new_code = random.randint(10000, 99999)
                     # Guardar el código en la sesión
                     session['recovery_code'] = new_code
+                    session['expiration'] = datetime.now() + timedelta(minutes=2)
                     session['recovery_email'] = email
                     # Enviar el código al correo del usuario
                     enviar_mensaje(email, new_code)
@@ -1086,7 +1087,7 @@ def recuperar_contrasena():
 def validar_codigo():
     if request.method == 'POST':
         code = request.form['code']
-        if int(code) == session.get('recovery_code'):
+        if int(code) == session.get('recovery_code') and datetime.now() < session.get('expiration'):
             return redirect(url_for('nueva_contrasena'))
         else:
             flash("Código incorrecto", "error")
