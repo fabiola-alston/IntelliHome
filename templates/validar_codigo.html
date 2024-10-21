@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validar Contraseña</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/validar_contraseña.css') }}">
+</head>
+<body>
+    <div class="password-validation-container">
+        <h2>Ingresa tu codigo</h2>
+        {% for message in get_flashed_messages() %}
+        <h3 class="error-message">{{ message }}</h3>
+        {% endfor %}
+        <form action="/validar_codigo" method="POST">
+            <div class="input-group">
+                <label for="code">Codigo:</label>
+                <input type="text" id="code" name="code" required>
+            </div>
+            <button type="submit">Enviar correo</button>
+        </form>
+    </div>
+</body>
+</html>

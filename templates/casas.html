@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casas Disponibles</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+</head>
+<body>
+    <h1>Casas Disponibles</h1>
+    <div class="houses-container">
+        {% for casa in casas %}
+        <div class="house-card">
+            <h2>{{ casa.nombre }}</h2>
+            <p>Ubicación: {{ casa.ubicacion }}</p>
+            <p>Capacidad: {{ casa.capacidad }}</p>
+            <p>Habitaciones: {{ casa.habitaciones }}</p>
+            <p>Baños: {{ casa.banos }}</p>
+            <p>Amenidades: {{ casa.amenidades }}</p>
+            <p>Características Generales: {{ casa.caracteristicas_generales }}</p>
+            <p>Otras Características: {{ casa.otras_caracteristicas }}</p>
+            <p>Coordenadas: {{ casa.coordenadas }}</p>
+            <div class="house-image">
+                {% for image in casa.imagen %}
+                <img src="{{ url_for('static', filename=image) }}" alt="Imagen de la casa">
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
+

@@ -3,7 +3,7 @@
         {
             "alias": "Admin",
             "email": "bla@gmail.com",
-            "password": "TEC2026*",
+            "password": "tec2026*",
             "nombre": "Admin",
             "fecha_nacimiento": "2024-09-09",
             "forma_pago": "Visca",
@@ -20,7 +20,31 @@
             "fecha_nacimiento": "2027-09-09",
             "forma_pago": "Visca",
             "foto_perfil": "user.png",
-            "casas": []
+            "casas": [],
+            "metodos_pago": []
+        },
+        {
+            "alias": "aaron",
+            "email": "lvoidiss@gmail.com",
+            "password": "prueba31A.",
+            "nombre": "Rodrigo Arce",
+            "fecha_nacimiento": "2006-01-07",
+            "forma_pago": "Visca",
+            "foto_perfil": "aaron.20241012202619.cover.jpg",
+            "casas": [
+                1
+            ],
+            "metodos_pago": [
+                {
+                    "card_number": "1221122112211221",
+                    "card_holder": "Aaron",
+                    "date": "12/28",
+                    "pin": "255",
+                    "brand": "visca",
+                    "debt": 0.0,
+                    "amount": 0.0
+                }
+            ]
         },
         {
             "alias": "rodrigo",
@@ -46,15 +70,24 @@
             ]
         },
         {
-            "alias": "aaron",
-            "email": "lvoidiss@gmail.com",
-            "password": "dognigga1971A.",
+            "alias": "rodrigo2",
+            "email": "r.arce.1@estudiantec.cr",
+            "password": "prueba33A.",
             "nombre": "Rodrigo Arce",
-            "fecha_nacimiento": "2006-01-07",
-            "forma_pago": "Visca",
-            "foto_perfil": "aaron.20241012202619.cover.jpg",
+            "fecha_nacimiento": "2002-01-01",
+            "metodos_pago": [
+                {
+                    "amount": 0,
+                    "brand": "visca",
+                    "card_holder": "Rodrigo Arce",
+                    "card_number": "1221122112211221",
+                    "date": "01/28",
+                    "debt": 150000,
+                    "pin": "255"
+                }
+            ],
+            "foto_perfil": "rodrigo2.20241021005749.ginpachi_sensei_1.jpeg",
             "casas": [
-                1
             ]
         }
     ],
@@ -84,12 +117,13 @@
         },
         {
             "id": 2,
-            "nombre": "Apartamento C\u00e9ntrico",
-            "ubicacion": "Ciudad de M\u00e9xico",
+            "nombre": "Apartamento Céntrico",
+            "ubicacion": "Ciudad de México",
             "precio": 150000,
             "imagen": "default/casa.jpeg",
             "calificacion": [],
-            "inqUilinos": []
+            "inquilinos": [
+            ]
         }
     ]
 }

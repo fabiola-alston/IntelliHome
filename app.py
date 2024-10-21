@@ -8,7 +8,6 @@ from flask import (
     flash,
     jsonify,
 )
-from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import re
 import random
@@ -52,7 +51,7 @@ def leer_usuarios():
                 "password",
                 "nombre",
                 "fecha_nacimiento",
-                "forma_pago",
+                "metodos_pago",
                 "foto_perfil",
                 "casas",
             ]
@@ -60,7 +59,7 @@ def leer_usuarios():
 
         # Verificar campos para usuarios y administradores
         usuarios = [u for u in usuarios if verificar_campos(u)]
-        administradores = [a for a in administradores if verificar_campos(a)]
+        administradores = [a for a in administradores]
 
         # Combinar usuarios y administradores en una sola lista
         todos_usuarios = usuarios + administradores
@@ -73,9 +72,6 @@ def leer_usuarios():
         print(f"Error al leer el archivo: {e}")
 
     return todos_usuarios
-
-
-# Asegúrate de que esta variable esté definida correctamente
 
 
 # Función para verificar si el alias o correo ya existen
@@ -104,7 +100,7 @@ def registrar_usuario(
         "password": password,
         "nombre": nombre,
         "fecha_nacimiento": fecha_nacimiento,
-        "forma_pago": forma_pago,
+        "metodos_pago": [forma_pago],
         "foto_perfil": foto_perfil,
         "casas": casas,
     }
@@ -151,7 +147,7 @@ def registrar_usuario(
 
 
 # Función para validar la contraseña
-def validación_contraseña(password):
+def validacion_contrasena(password):
     if len(password) < 7:
         return False, "La contraseña debe tener al menos 7 caracteres."
     if not re.search(r"[A-Z]", password):
@@ -166,13 +162,14 @@ def validación_contraseña(password):
 
 
 # Función para enviar un correo electrónico con el código de verificación
-def enviar_codigo(email, codigo):
+def enviar_mensaje(email, codigo, message=None):
     sender_email = "intellihome.playitaiguana@gmail.com"
     sender_password = "feum sttx vaqc peip"
 
     msg = EmailMessage()
-    msg.set_content(
-        f"""
+    msg_content = ""
+    if not message:
+        msg_content = f"""
     Estimado usuario,
 
     Saludos desde Intelli Home. A continuación, le proporcionamos su código de verificación:
@@ -185,8 +182,11 @@ def enviar_codigo(email, codigo):
 
     Atentamente,
     El equipo de Intelli Home.
-    """
-    )
+        """
+    else:
+        msg_content = message
+
+    msg.set_content(msg_content)
 
     msg["Subject"] = "Código de Verificación"
     msg["From"] = sender_email
@@ -251,7 +251,27 @@ def register():
         email = request.form["email"]
         nombre = request.form["nombre"]
         fecha_nacimiento = request.form["fecha_nacimiento"]
-        forma_pago = request.form["pago"]
+        # Obtiene toda la informacion de pago (card_number, card_holder, date, pin, brand)
+        brand = request.form["brand"]
+        card_holder = request.form["card_holder"]
+        card_number = request.form["card_number"]
+        pin = request.form["pin"]
+        year = request.form["year"]
+        month = request.form["month"]
+
+        if not validar_metodo_de_pago(card_number, card_holder, month, year, pin, brand):
+            flash("Por favor, ingresa información válida")
+            return redirect(url_for("register"))
+        metodo_pago = {
+            "card_number": card_number,
+            "card_holder": card_holder,
+            "date": f"{month}/{year}",
+            "pin": pin,
+            "brand": brand,
+            "debt": 0,
+            "amount": 0
+        }
+
 
         # Validar si el alias o correo ya existen
         if alias_o_correo_duplicado(alias, email):
@@ -276,7 +296,7 @@ def register():
         session["email"] = email
         session["nombre"] = nombre
         session["fecha_nacimiento"] = fecha_nacimiento
-        session["forma_pago"] = forma_pago
+        session["metodo_pago"] = metodo_pago
         session["foto_perfil"] = filename
 
         # Generar y enviar código de verificación con límite de 2 minutos
@@ -284,7 +304,7 @@ def register():
         session["codigo_expiracion"] = datetime.now(timezone.utc) + timedelta(minutes=2)
         session["intentos"] = 1  # Se permite un intento extra
 
-        enviar_codigo(email, session["codigo"])
+        enviar_mensaje(email, session["codigo"])
 
         return redirect(url_for("validar_correo"))
     return render_template("register.html")
@@ -308,7 +328,7 @@ def validar_correo():
                 session["codigo_expiracion"] = datetime.now(timezone.utc) + timedelta(
                     minutes=2
                 )
-                enviar_codigo(session["email"], session["codigo"])
+                enviar_mensaje(session["email"], session["codigo"])
                 session["intentos"] += 1
             else:
                 error_message = "El código ha expirado y ya no tienes más intentos."
@@ -328,7 +348,7 @@ def validar_contraseña():
     error_message = None
     if request.method == "POST":
         password = request.form["password"]
-        valid, message = validación_contraseña(password)
+        valid, message = validacion_contrasena(password)
         if valid:
             registrar_usuario(
                 session["alias"],
@@ -336,7 +356,7 @@ def validar_contraseña():
                 password,
                 session["nombre"],
                 session["fecha_nacimiento"],
-                session["forma_pago"],
+                session["metodo_pago"],
                 session["foto_perfil"],
             )
             flash("Usuario registrado correctamente")
@@ -362,7 +382,7 @@ def login():
                 session["foto_perfil"] = usuario[
                     "foto_perfil"
                 ]  # Guardar la foto en la sesión
-                if alias == "Admin":
+                if is_admin(alias):
                     return redirect(url_for("admin_dashboard"))
                 else:
                     return redirect(url_for("user_dashboard"))
@@ -421,6 +441,7 @@ def actualizar_contrasena():
         flash("Contraseña actualizada exitosamente.")
         return redirect(url_for("admin_dashboard"))
     return render_template("cambiar_contraseña.html")
+
 
 
 # Función para actualizar la contraseña del usuario en el archivo
@@ -594,7 +615,7 @@ def actualizar_perfil():
                     new_password = request.form["password"]
                     if new_password:
                         if new_password == request.form["confirm_password"]:
-                            usuario["password"] = generate_password_hash(new_password)
+                            usuario["password"] = new_password
                         else:
                             flash("Las contraseñas no coinciden")
                             return redirect(url_for("user_dashboard"))
@@ -622,56 +643,91 @@ def actualizar_perfil():
         return redirect(url_for("user_dashboard"))
 
 
-@app.route("/alquilar_casa/<int:id>", methods=["POST"])
-def alquilar_casa(id):
-    if "user" not in session:
-        flash("Debes iniciar sesión para alquilar una casa.")
-        return redirect(url_for("home"))
+@app.route("/pagar_alquiler/<int:id_house>", methods=["POST", "GET"])
+def pagar_alquiler(id_house):
+    if request.method == "POST":
+        try:
+            data = {}
+            with open(USERS_FILE, "r+", encoding="utf-8") as f:
+                data = json.load(f)
 
-    try:
-        with open(USERS_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            # Buscar la casa por ID
+            casa = next((casa for casa in data["casas"] if casa["id"] == id_house), None)
+            print(casa)
+            if not casa:
+                flash("Casa no encontrada.")
+                return redirect(url_for("explorar"))
 
-        # Buscar la casa por ID
-        casa = next((casa for casa in data["casas"] if casa["id"] == id), None)
-        if not casa:
-            flash("Casa no encontrada.")
+            # Buscar al usuario actual
+            usuario_actual = next(
+                (u for u in data["usuarios"] if u["alias"] == session["user"]), None
+            )
+            print(usuario_actual)
+            if not usuario_actual:
+                flash("Usuario no encontrado.")
+                return redirect(url_for("explorar"))
+
+            # Buscar el método de pago del usuario
+            metodo_pago = next(
+                (
+                    mp
+                    for mp in usuario_actual.get("metodos_pago", [])
+                    if mp["brand"] == request.form["metodo_pago"]
+                ),
+                None,
+            )
+            if not metodo_pago:
+                flash("No se encontró un método de pago válido.")
+                return redirect(url_for("user_dashboard"))
+
+            print(metodo_pago)
+
+            # Verificar si el usuario tiene suficiente saldo
+            if metodo_pago["debt"] >= casa["precio"]:
+                flash("No tienes suficiente saldo para pagar el alquiler.")
+                return redirect(url_for("user_dashboard"))
+
+            for usuario in data["usuarios"]:
+                if usuario["alias"] == session["user"]:
+                    for metodo_pago in usuario["metodos_pago"]:
+                        if metodo_pago["brand"] == request.form["metodo_pago"]:
+                            metodo_pago["debt"] += casa["precio"]
+                            break
+                    if id_house not in usuario["casas"]:
+                        usuario["casas"].append(id_house)
+
+            casa["inquilinos"].append(session["user"])
+            print(casa)
+            for casa in data["casas"]:
+                if casa["id"] == id_house:
+                    casa["inquilinos"].append(session["user"])
+                    break 
+            # Guardar los cambios en el archivo JSON
+            with open(USERS_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+
+            flash(f"Alquiler pagado exitosamente para la casa: {casa['nombre']}")
+            return redirect(url_for("user_dashboard"))
+
+        except Exception as e:
+            print(f"Error al pagar el alquiler: {e}")
+            flash("Ocurrió un error al pagar el alquiler.")
             return redirect(url_for("explorar"))
 
-        # Verificar si la casa ya está alquilada
-        if casa["inquilinos"]:
-            flash("Esta casa ya está alquilada.")
-            return redirect(url_for("detalles_casa", id=id))
+    data = {}
+    with open(USERS_FILE, "r+", encoding="utf-8") as f:
+        data = json.load(f)
 
-        # Buscar al usuario actual
-        usuario_actual = next(
-            (u for u in data["usuarios"] if u["alias"] == session["user"]), None
-        )
-        if not usuario_actual:
-            flash("Usuario no encontrado.")
-            return redirect(url_for("explorar"))
+    metodos_pago = []
+    usuario_actual = next(
+        (u for u in data["usuarios"] if u["alias"] == session["user"]), None
+    )
+    if usuario_actual:
+        metodos_pago = usuario_actual.get("metodos_pago", [])
 
-        # Agregar la casa a la lista de casas del usuario
-        if "casas" not in usuario_actual:
-            usuario_actual["casas"] = []
-
-
-        usuario_actual["casas"].append(id)  # Usar ID de la casa
-
-        # Agregar al usuario como inquilino de la casa
-        casa["inquilinos"].append(session["user"])
-
-        # Guardar los cambios en el archivo JSON
-        with open(USERS_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
-
-        flash(f"Has alquilado exitosamente la casa: {casa['nombre']}")
-        return redirect(url_for("user_dashboard"))
-
-    except Exception as e:
-        print(f"Error al alquilar la casa: {e}")
-        flash("Ocurrió un error al intentar alquilar la casa.")
-        return redirect(url_for("explorar"))
+    print(metodos_pago)
+    casa = next((casa for casa in data["casas"] if casa["id"] == id_house), None)
+    return render_template("pagar_alquiler.html", id_house=id_house, casa=casa, metodos_pago=metodos_pago)
 
 
 @app.route("/autorizar_inquilino/<int:casa_id>", methods=["POST"])
@@ -804,6 +860,28 @@ def guardar_info_pago(
             json.dump(data, f, indent=4)
 
 
+def validar_metodo_de_pago(card_number, card_holder: str, month, year, pin, brand):
+    validation = (
+        card_number.isdigit(),
+        len(card_number) == 16,
+        len(card_holder) > 0,
+        month.isdigit(),
+        1 <= int(month) <= 13,
+        year.isdigit(),
+        len(year) == 2,
+        pin.isdigit(),
+        3 <= len(pin) <= 5,
+        any((
+            brand.lower() == "visca" and card_number.startswith("1"), 
+            brand.lower() == "masterchef" and card_number.startswith("2"),
+            brand.lower() == "americancity" and card_number.startswith("3"),
+            brand.lower() == "ticaplay" and card_number.startswith("4")
+        ))
+    )
+    print(validation)
+    return all(validation)
+
+
 @app.route('/agregar_pago', methods=['GET', 'POST'])
 def agregar_pago():
     if request.method == 'POST':
@@ -820,43 +898,14 @@ def agregar_pago():
             flash("Marca de tarjeta no válida")
             return redirect(url_for('agregar_pago'))
 
-        print(
-            card_number.isdigit(),
-            len(card_number) == 16,
-            card_holder.isalpha(),
-            len(card_holder) > 0,
-            month.isdigit(),
-            1 <= int(month) <= 13,
-            year.isdigit(),
-            len(year) == 2,
-            pin.isdigit(),
-            3 <= len(pin) <= 4,
-            brand.lower() == "visca" and card_number.startswith("1"),
-            brand.lower() == "masterchef" and card_number.startswith("2"),
-            brand.lower() == "americancity" and card_number.startswith("3"),
-            brand.lower() == "ticaplay" and card_number.startswith("4"),
-        )
-
-        if not (
-            card_number.isdigit()
-            and len(card_number) == 16
-            and card_holder.isalpha()
-            and len(card_holder) > 0
-            and month.isdigit()
-            and 1 <= int(month) <= 13
-            and year.isdigit()
-            and len(year) == 2
-            and pin.isdigit()
-            and 3 <= len(pin) <= 4
-            and (
-                brand.lower() == "visca" and card_number.startswith("1") 
-                or brand.lower() == "masterchef" and card_number.startswith("2")
-                or brand.lower() == "americancity" and card_number.startswith("3")
-                or brand.lower() == "ticaplay" and card_number.startswith("4")
-            )
-        ):
+        try:
+            if not validar_metodo_de_pago(card_number, card_holder, month, year, pin, brand):
+                flash("Por favor, ingresa información válida")
+                return redirect(url_for('agregar_pago'))
+        except ValueError:
             flash("Por favor, ingresa información válida")
             return redirect(url_for('agregar_pago'))
+
         # Chequea que la fecha de expiración sea válida
         current_month = datetime.now().month
         current_year = datetime.now().year % 100 
@@ -871,7 +920,246 @@ def agregar_pago():
     return render_template('agregar_pago.html')
 
 
+@app.route('/add_house', methods=['POST'])
+def add_house():
+    # Obtener datos del formulario
+    capacity = request.form['capacity']
+    rooms = request.form['rooms']
+    bathrooms = request.form['bathrooms']
+    amenities = request.form['amenities']
+    features = request.form['features']
+    other_features = request.form['other-features']
+    address = request.form['address']
+    coordinates = request.form['coordinates']
+    # Manejo de la carga de fotos
+    photos = request.files.getlist('photos')
+    photo_paths = []
+    for photo in photos:
+        if photo:
+            photo_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
+            photo.save(photo_path)
+            photo_paths.append(photo_path)
 
+    # Cargar datos en el archivo JSON
+    with open('usuarios.json', 'r+') as file:
+        data = json.load(file)
+        new_house = {
+            "id": len(data['casas']) + 1,  # Asignar un nuevo ID
+            "nombre": address, 
+            "ubicacion": address,
+            "precio": 0,  
+            "calificacion": [],
+            "imagen": photo_paths[0],  # Guarda las rutas de las imágenes
+            "imagenes": photo_paths,
+            "inquilinos": [],
+            "capacidad": capacity,
+            "habitaciones": rooms,
+            "banos": bathrooms,
+            "amenidades": amenities,
+            "caracteristicas_generales": features,
+            "otras_caracteristicas": other_features,
+            "coordenadas": coordinates
+        }
+        data['casas'].append(new_house)
+        file.seek(0)
+        json.dump(data, file, indent=4)
+        file.truncate()
+
+    return jsonify({"message": "Casa agregada exitosamente!"}), 201
+
+
+@app.route('/casas')
+def casas():
+    with open('usuarios.json', 'r') as file:
+        data = json.load(file)
+    return render_template('casas.html', casas=data['casas'])
+
+
+# Cambia el nombre de la función para evitar conflictos
+@app.route('/inactive_houses')
+def list_inactive_houses():
+    with open('usuarios.json', 'r') as file:
+        data = json.load(file)
+    # Filtrar casas inactivas
+    inactive_houses = [house for house in data['casas'] if not house.get('disponible', True)]
+    return render_template('admin.html', inactive_houses=inactive_houses)
+
+
+# Ruta para cambiar el estado de la casa a disponible
+@app.route('/set_available/<int:house_id>', methods=['GET'])
+def set_available(house_id):
+    with open('usuarios.json', 'r+') as file:
+        data = json.load(file)
+        # Buscar la casa por ID y cambiar su estado
+        for house in data['casas']:
+            if house['id'] == house_id:
+                house['disponible'] = True  # Cambiar el estado a disponible
+                break
+        # Guardar los cambios en el archivo JSON
+        file.seek(0)
+        json.dump(data, file, indent=4)
+        file.truncate()
+    flash("La casa ha sido marcada como disponible.", "success")
+    return redirect(url_for('list_inactive_houses'))  # Redirigir a la lista de casas inactivas
+
+
+def is_admin(user):
+    with open('usuarios.json', 'r') as file:
+        data = json.load(file)
+    return user in [admin['alias'] for admin in data['administradores']]
+
+
+@app.route('/promocionar', methods=['POST'])
+def promocionar():
+    if not is_admin(session.get('user')):
+        return redirect(url_for('home'))
+
+    if request.method == 'POST':
+        alias = request.form['alias']
+        user_data = {}
+        user_email = ""
+        with open('usuarios.json', 'r+') as file:
+            data = json.load(file)
+            for user in data['usuarios']:
+                if user['alias'] == alias:
+                    user_data = user
+                    break
+
+            user_email = user_data['email']
+            session['promocionando'] = True
+
+            # Enviar un correo al usuario para confirmar la promoción
+            enviar_mensaje(
+                user_email,
+                0,
+                message= f"""
+¡Felicidades! Has sido promocionado a administrador.
+Confirma la promocion entrando al siguiente link: http://localhost:5000/confirmar_promocion
+                """
+            )
+        return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/confirmar_promocion', methods=['POST', 'GET'])
+def confirmar_promocion():
+    """
+    Esta ruta la abre al usuario. En la funcion promocionar, se le 
+    envia un link a esta ruta para que el usuario confirme su promocion.
+    Muestra un mensaje de exito si el usuario confirma su promocion.
+    """
+    if is_admin(session.get('user')) or not session.get('promocionando'):
+        return redirect(url_for('home'))
+
+    if request.method == 'POST':
+        user_data = {}
+        user_alias = request.form['alias']
+
+        with open('usuarios.json', 'r+') as file:
+            data = json.load(file)
+            for user in data['usuarios']:
+                if user['alias'] == user_alias:
+                    user_data = user
+                    break
+
+            data["administradores"].append(user_data)
+            del data["usuarios"][data["usuarios"].index(user_data)]
+            file.seek(0)
+            json.dump(data, file, indent=4)
+            file.truncate()
+
+        return redirect(url_for('promocion_confirmada'))
+
+    if request.method == 'GET':
+        return render_template('confirmar_promocion.html', alias=session.get('user'))
+
+
+@app.route('/promocion_confirmada', methods=['POST', 'GET'])
+def promocion_confirmada():
+    flash("¡Felicidades! Has sido promocionado a administrador.", "success")
+    return redirect(url_for('user_dashboard'))
+
+
+@app.route('/eliminar_admin', methods=['POST', 'GET'])
+def eliminar_admin():
+    if not is_admin(session.get('user')):
+        return redirect(url_for('home'))
+    alias = request.form['alias']
+    user_data = {}
+    with open('usuarios.json', 'r+') as file:
+        data = json.load(file)
+        for user in data['administradores']:
+            if user['alias'] == alias:
+                user_data = user
+                break
+        else:
+            flash("Usuario no encontrado", "error")
+            return redirect(url_for('admin_dashboard'))
+
+        data["usuarios"].append(user_data)
+        del data["administradores"][data["administradores"].index(user_data)]
+        file.seek(0)
+        json.dump(data, file, indent=4)
+        file.truncate()
+
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/recuperar_contrasena', methods=['POST', 'GET'])
+def recuperar_contrasena():
+    if request.method == 'POST':
+        email = request.form['email']
+        with open('usuarios.json', 'r') as file:
+            data = json.load(file)
+            for user in data['usuarios']:
+                if user['email'] == email:
+                    # Generar un nuevo código de verificación
+                    new_code = random.randint(10000, 99999)
+                    # Guardar el código en la sesión
+                    session['recovery_code'] = new_code
+                    session['expiration'] = datetime.now() + timedelta(minutes=2)
+                    session['recovery_email'] = email
+                    # Enviar el código al correo del usuario
+                    enviar_mensaje(email, new_code)
+                    return redirect(url_for('validar_codigo'))
+            else:
+                flash("Correo no encontrado", "error")
+    return render_template('recuperar_contrasena.html')
+
+
+@app.route('/validar_codigo', methods=['POST', 'GET'])
+def validar_codigo():
+    if request.method == 'POST':
+        code = request.form['code']
+        if int(code) == session.get('recovery_code') and datetime.now() < session.get('expiration'):
+            return redirect(url_for('nueva_contrasena'))
+        elif datetime.now() > session.get('expiration'):
+            flash("El código ha expirado", "error")
+        else:
+            flash("Código incorrecto", "error")
+    return render_template('validar_codigo.html')
+
+
+@app.route('/nueva_contrasena', methods=['POST', 'GET'])
+def nueva_contrasena():
+    if request.method == 'POST':
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        if password == confirm_password and validacion_contrasena(password)[0]:
+            with open('usuarios.json', 'r+') as file:
+                data = json.load(file)
+                for user in data['usuarios']:
+                    if user['email'] == session.get('recovery_email'):
+                        user['password'] = password
+                        file.seek(0)
+                        json.dump(data, file, indent=4)
+                        file.truncate()
+                        flash("Contraseña actualizada", "success")
+                        return redirect(url_for('home'))
+                else:
+                    flash("Correo no encontrado", "error")
+        else:
+            flash("Las contraseñas no coinciden", "error")
+    return render_template('nueva_contrasena.html')
 
 
 if __name__ == "__main__":
