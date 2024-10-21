@@ -26,7 +26,7 @@
         {
             "alias": "aaron",
             "email": "lvoidiss@gmail.com",
-            "password": "dognigga1971A.",
+            "password": "prueba31A.",
             "nombre": "Rodrigo Arce",
             "fecha_nacimiento": "2006-01-07",
             "forma_pago": "Visca",
@@ -68,6 +68,24 @@
                     "amount": 0.0
                 }
             ]
+        },
+        {
+            "alias": "rodrigo2",
+            "email": "r.arce.1@estudiantec.cr",
+            "password": "prueba33A.",
+            "nombre": "Rodrigo Arce",
+            "fecha_nacimiento": "2002-01-01",
+            "metodos_pago": {
+                "amount": 0,
+                "brand": "visca",
+                "card_holder": "Rodrigo Arce",
+                "card_number": "1221122112211221",
+                "date": "01/28",
+                "debt": 0,
+                "pin": "255"
+            },
+            "foto_perfil": "rodrigo2.20241021005749.ginpachi_sensei_1.jpeg",
+            "casas": []
         }
     ],
     "casas": [

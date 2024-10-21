@@ -100,7 +100,7 @@ def registrar_usuario(
         "password": password,
         "nombre": nombre,
         "fecha_nacimiento": fecha_nacimiento,
-        "forma_pago": forma_pago,
+        "metodos_pago": forma_pago,
         "foto_perfil": foto_perfil,
         "casas": casas,
     }
@@ -251,7 +251,27 @@ def register():
         email = request.form["email"]
         nombre = request.form["nombre"]
         fecha_nacimiento = request.form["fecha_nacimiento"]
-        forma_pago = request.form["pago"]
+        # Obtiene toda la informacion de pago (card_number, card_holder, date, pin, brand)
+        brand = request.form["brand"]
+        card_holder = request.form["card_holder"]
+        card_number = request.form["card_number"]
+        pin = request.form["pin"]
+        year = request.form["year"]
+        month = request.form["month"]
+
+        if not validar_metodo_de_pago(card_number, card_holder, month, year, pin, brand):
+            flash("Por favor, ingresa información válida")
+            return redirect(url_for("register"))
+        metodo_pago = {
+            "card_number": card_number,
+            "card_holder": card_holder,
+            "date": f"{month}/{year}",
+            "pin": pin,
+            "brand": brand,
+            "debt": 0,
+            "amount": 0
+        }
+
 
         # Validar si el alias o correo ya existen
         if alias_o_correo_duplicado(alias, email):
@@ -276,7 +296,7 @@ def register():
         session["email"] = email
         session["nombre"] = nombre
         session["fecha_nacimiento"] = fecha_nacimiento
-        session["forma_pago"] = forma_pago
+        session["metodo_pago"] = metodo_pago
         session["foto_perfil"] = filename
 
         # Generar y enviar código de verificación con límite de 2 minutos
@@ -336,7 +356,7 @@ def validar_contraseña():
                 password,
                 session["nombre"],
                 session["fecha_nacimiento"],
-                session["forma_pago"],
+                session["metodo_pago"],
                 session["foto_perfil"],
             )
             flash("Usuario registrado correctamente")
@@ -805,6 +825,28 @@ def guardar_info_pago(
             json.dump(data, f, indent=4)
 
 
+def validar_metodo_de_pago(card_number, card_holder: str, month, year, pin, brand):
+    validation = (
+        card_number.isdigit(),
+        len(card_number) == 16,
+        len(card_holder) > 0,
+        month.isdigit(),
+        1 <= int(month) <= 13,
+        year.isdigit(),
+        len(year) == 2,
+        pin.isdigit(),
+        3 <= len(pin) <= 5,
+        any((
+            brand.lower() == "visca" and card_number.startswith("1"), 
+            brand.lower() == "masterchef" and card_number.startswith("2"),
+            brand.lower() == "americancity" and card_number.startswith("3"),
+            brand.lower() == "ticaplay" and card_number.startswith("4")
+        ))
+    )
+    print(validation)
+    return all(validation)
+
+
 @app.route('/agregar_pago', methods=['GET', 'POST'])
 def agregar_pago():
     if request.method == 'POST':
@@ -822,41 +864,7 @@ def agregar_pago():
             return redirect(url_for('agregar_pago'))
 
         try:
-            print(
-                card_number.isdigit(),
-                len(card_number) == 16,
-                card_holder.isalpha(),
-                len(card_holder) > 0,
-                month.isdigit(),
-                1 <= int(month) <= 13,
-                year.isdigit(),
-                len(year) == 2,
-                pin.isdigit(),
-                3 <= len(pin) <= 4,
-                brand.lower() == "visca" and card_number.startswith("1"),
-                brand.lower() == "masterchef" and card_number.startswith("2"),
-                brand.lower() == "americancity" and card_number.startswith("3"),
-                brand.lower() == "ticaplay" and card_number.startswith("4"),
-            )
-            validation = (
-                card_number.isdigit(),
-                len(card_number) == 16,
-                card_holder.isalpha(),
-                len(card_holder) > 0,
-                month.isdigit(),
-                1 <= int(month) <= 13,
-                year.isdigit(),
-                len(year) == 2,
-                pin.isdigit(),
-                3 <= len(pin) <= 4,
-                (
-                    brand.lower() == "visca" and card_number.startswith("1"),
-                    brand.lower() == "masterchef" and card_number.startswith("2"),
-                    brand.lower() == "americancity" and card_number.startswith("3"),
-                    brand.lower() == "ticaplay" and card_number.startswith("4"),
-                )
-            )
-            if not all(validation):
+            if not validar_metodo_de_pago(card_number, card_holder, month, year, pin, brand):
                 flash("Por favor, ingresa información válida")
                 return redirect(url_for('agregar_pago'))
         except ValueError:
