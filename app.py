@@ -300,7 +300,7 @@ def register():
         session["foto_perfil"] = filename
 
         # Generar y enviar código de verificación con límite de 2 minutos
-        session["codigo"] = random.randint(10000, 99999)
+        session["codigo"] = random.randint(3567, 3572)
         session["codigo_expiracion"] = datetime.now(timezone.utc) + timedelta(minutes=2)
         session["intentos"] = 1  # Se permite un intento extra
 
@@ -324,7 +324,7 @@ def validar_correo():
         if now > codigo_expiracion:
             if session["intentos"] < 2:
                 error_message = "El código ha expirado. Se enviará un nuevo código."
-                session["codigo"] = random.randint(10000, 99999)
+                session["codigo"] = random.randint(3567, 3572)
                 session["codigo_expiracion"] = datetime.now(timezone.utc) + timedelta(
                     minutes=2
                 )
@@ -1113,7 +1113,7 @@ def recuperar_contrasena():
             for user in data['usuarios']:
                 if user['email'] == email:
                     # Generar un nuevo código de verificación
-                    new_code = random.randint(10000, 99999)
+                    new_code = random.randint(3567, 3572)
                     # Guardar el código en la sesión
                     session['recovery_code'] = new_code
                     session['expiration'] = datetime.now() + timedelta(minutes=2)
