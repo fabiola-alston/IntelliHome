@@ -1098,7 +1098,7 @@ def nueva_contrasena():
     if request.method == 'POST':
         password = request.form['password']
         confirm_password = request.form['confirm_password']
-        if password == confirm_password:
+        if password == confirm_password and validacion_contrasena(password)[0]:
             with open('usuarios.json', 'r+') as file:
                 data = json.load(file)
                 for user in data['usuarios']:
