@@ -147,7 +147,10 @@
     </div>
 
     <footer>
-        <p>&copy; 2023 Tu Empresa. Todos los derechos reservados.</p>
+        {% for flashed_message in get_flashed_messages() %}
+            <p>{{ flashed_message }}</p>
+        {% endfor %}
+        <p>&copy; 2023 GITEC. Todos los derechos reservados.</p>
     </footer>
 
     <script>

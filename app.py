@@ -59,7 +59,7 @@ def leer_usuarios():
 
         # Verificar campos para usuarios y administradores
         usuarios = [u for u in usuarios if verificar_campos(u)]
-        administradores = [a for a in administradores if verificar_campos(a)]
+        administradores = [a for a in administradores]
 
         # Combinar usuarios y administradores en una sola lista
         todos_usuarios = usuarios + administradores
@@ -365,7 +365,7 @@ def login():
                 session["foto_perfil"] = usuario[
                     "foto_perfil"
                 ]  # Guardar la foto en la sesión
-                if alias == "Admin":
+                if is_admin(alias):
                     return redirect(url_for("admin_dashboard"))
                 else:
                     return redirect(url_for("user_dashboard"))
@@ -1036,6 +1036,8 @@ def promocion_confirmada():
 
 @app.route('/eliminar_admin', methods=['POST', 'GET'])
 def eliminar_admin():
+    if not is_admin(session.get('user')):
+        return redirect(url_for('home'))
     alias = request.form['alias']
     user_data = {}
     with open('usuarios.json', 'r+') as file:
@@ -1044,12 +1046,17 @@ def eliminar_admin():
             if user['alias'] == alias:
                 user_data = user
                 break
+        else:
+            flash("Usuario no encontrado", "error")
+            return redirect(url_for('admin_dashboard'))
 
         data["usuarios"].append(user_data)
         del data["administradores"][data["administradores"].index(user_data)]
         file.seek(0)
         json.dump(data, file, indent=4)
         file.truncate()
+
+    return redirect(url_for('admin_dashboard'))
 
 
 if __name__ == "__main__":

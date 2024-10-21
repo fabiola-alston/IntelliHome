@@ -9,29 +9,6 @@
             "forma_pago": "Visca",
             "foto_perfil": "admin.png",
             "casas": []
-        },
-        {
-            "alias": "rodrigo",
-            "email": "roarba011@gmail.com",
-            "password": "prueba32A.",
-            "nombre": "Rodrigo Arce",
-            "fecha_nacimiento": "0707-07-07",
-            "forma_pago": "MasterChef",
-            "foto_perfil": "rodrigo.20241012195546.cover.jpg",
-            "casas": [
-                1
-            ],
-            "metodos_pago": [
-                {
-                    "card_number": "1221122112211221",
-                    "card_holder": "Rodrigo",
-                    "date": "12/28",
-                    "pin": "255",
-                    "brand": "visca",
-                    "debt": 0.0,
-                    "amount": 0.0
-                }
-            ]
         }
     ],
     "usuarios": [
@@ -61,6 +38,29 @@
                 {
                     "card_number": "1221122112211221",
                     "card_holder": "Aaron",
+                    "date": "12/28",
+                    "pin": "255",
+                    "brand": "visca",
+                    "debt": 0.0,
+                    "amount": 0.0
+                }
+            ]
+        },
+        {
+            "alias": "rodrigo",
+            "email": "roarba011@gmail.com",
+            "password": "prueba32A.",
+            "nombre": "Rodrigo Arce",
+            "fecha_nacimiento": "0707-07-07",
+            "forma_pago": "MasterChef",
+            "foto_perfil": "rodrigo.20241012195546.cover.jpg",
+            "casas": [
+                1
+            ],
+            "metodos_pago": [
+                {
+                    "card_number": "1221122112211221",
+                    "card_holder": "Rodrigo",
                     "date": "12/28",
                     "pin": "255",
                     "brand": "visca",
