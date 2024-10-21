@@ -821,43 +821,48 @@ def agregar_pago():
             flash("Marca de tarjeta no válida")
             return redirect(url_for('agregar_pago'))
 
-        print(
-            card_number.isdigit(),
-            len(card_number) == 16,
-            card_holder.isalpha(),
-            len(card_holder) > 0,
-            month.isdigit(),
-            1 <= int(month) <= 13,
-            year.isdigit(),
-            len(year) == 2,
-            pin.isdigit(),
-            3 <= len(pin) <= 4,
-            brand.lower() == "visca" and card_number.startswith("1"),
-            brand.lower() == "masterchef" and card_number.startswith("2"),
-            brand.lower() == "americancity" and card_number.startswith("3"),
-            brand.lower() == "ticaplay" and card_number.startswith("4"),
-        )
-
-        if not (
-            card_number.isdigit()
-            and len(card_number) == 16
-            and card_holder.isalpha()
-            and len(card_holder) > 0
-            and month.isdigit()
-            and 1 <= int(month) <= 13
-            and year.isdigit()
-            and len(year) == 2
-            and pin.isdigit()
-            and 3 <= len(pin) <= 4
-            and (
-                brand.lower() == "visca" and card_number.startswith("1") 
-                or brand.lower() == "masterchef" and card_number.startswith("2")
-                or brand.lower() == "americancity" and card_number.startswith("3")
-                or brand.lower() == "ticaplay" and card_number.startswith("4")
+        try:
+            print(
+                card_number.isdigit(),
+                len(card_number) == 16,
+                card_holder.isalpha(),
+                len(card_holder) > 0,
+                month.isdigit(),
+                1 <= int(month) <= 13,
+                year.isdigit(),
+                len(year) == 2,
+                pin.isdigit(),
+                3 <= len(pin) <= 4,
+                brand.lower() == "visca" and card_number.startswith("1"),
+                brand.lower() == "masterchef" and card_number.startswith("2"),
+                brand.lower() == "americancity" and card_number.startswith("3"),
+                brand.lower() == "ticaplay" and card_number.startswith("4"),
             )
-        ):
+            validation = (
+                card_number.isdigit(),
+                len(card_number) == 16,
+                card_holder.isalpha(),
+                len(card_holder) > 0,
+                month.isdigit(),
+                1 <= int(month) <= 13,
+                year.isdigit(),
+                len(year) == 2,
+                pin.isdigit(),
+                3 <= len(pin) <= 4,
+                (
+                    brand.lower() == "visca" and card_number.startswith("1"),
+                    brand.lower() == "masterchef" and card_number.startswith("2"),
+                    brand.lower() == "americancity" and card_number.startswith("3"),
+                    brand.lower() == "ticaplay" and card_number.startswith("4"),
+                )
+            )
+            if not all(validation):
+                flash("Por favor, ingresa información válida")
+                return redirect(url_for('agregar_pago'))
+        except ValueError:
             flash("Por favor, ingresa información válida")
             return redirect(url_for('agregar_pago'))
+
         # Chequea que la fecha de expiración sea válida
         current_month = datetime.now().month
         current_year = datetime.now().year % 100 
