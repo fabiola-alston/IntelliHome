@@ -166,13 +166,14 @@ def validacion_contrasena(password):
 
 
 # Función para enviar un correo electrónico con el código de verificación
-def enviar_codigo(email, codigo):
+def enviar_codigo(email, codigo, message=None):
     sender_email = "intellihome.playitaiguana@gmail.com"
     sender_password = "feum sttx vaqc peip"
 
     msg = EmailMessage()
-    msg.set_content(
-        f"""
+    msg_content = ""
+    if not message:
+        msg_content = f"""
     Estimado usuario,
 
     Saludos desde Intelli Home. A continuación, le proporcionamos su código de verificación:
@@ -185,8 +186,11 @@ def enviar_codigo(email, codigo):
 
     Atentamente,
     El equipo de Intelli Home.
-    """
-    )
+        """
+    else:
+        msg_content = message
+
+    msg.set_content(msg_content)
 
     msg["Subject"] = "Código de Verificación"
     msg["From"] = sender_email
