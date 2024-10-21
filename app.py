@@ -297,6 +297,7 @@ def register():
         session["nombre"] = nombre
         session["fecha_nacimiento"] = fecha_nacimiento
         session["metodo_pago"] = metodo_pago
+        session["forma_pago"] = metodo_pago["brand"]
         session["foto_perfil"] = filename
 
         # Generar y enviar código de verificación con límite de 2 minutos
@@ -381,7 +382,11 @@ def login():
                 session["user"] = alias
                 session["foto_perfil"] = usuario[
                     "foto_perfil"
-                ]  # Guardar la foto en la sesión
+                ] 
+                session["nombre"] = usuario["nombre"]
+                session["fecha_nacimiento"] = usuario["fecha_nacimiento"]
+                session["forma_pago"] = usuario["metodos_pago"][0]["brand"]
+                session["email"] = usuario["email"]
                 if is_admin(alias):
                     return redirect(url_for("admin_dashboard"))
                 else:
