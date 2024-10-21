@@ -52,7 +52,7 @@ def leer_usuarios():
                 "password",
                 "nombre",
                 "fecha_nacimiento",
-                "forma_pago",
+                "metodos_pago",
                 "foto_perfil",
                 "casas",
             ]
@@ -151,7 +151,7 @@ def registrar_usuario(
 
 
 # Función para validar la contraseña
-def validación_contraseña(password):
+def validacion_contrasena(password):
     if len(password) < 7:
         return False, "La contraseña debe tener al menos 7 caracteres."
     if not re.search(r"[A-Z]", password):
@@ -328,7 +328,7 @@ def validar_contraseña():
     error_message = None
     if request.method == "POST":
         password = request.form["password"]
-        valid, message = validación_contraseña(password)
+        valid, message = validacion_contrasena(password)
         if valid:
             registrar_usuario(
                 session["alias"],
@@ -933,10 +933,8 @@ def casas():
 def list_inactive_houses():
     with open('usuarios.json', 'r') as file:
         data = json.load(file)
-    
     # Filtrar casas inactivas
     inactive_houses = [house for house in data['casas'] if not house.get('disponible', True)]
-    
     return render_template('admin.html', inactive_houses=inactive_houses)
 
 
@@ -945,18 +943,15 @@ def list_inactive_houses():
 def set_available(house_id):
     with open('usuarios.json', 'r+') as file:
         data = json.load(file)
-        
         # Buscar la casa por ID y cambiar su estado
         for house in data['casas']:
             if house['id'] == house_id:
                 house['disponible'] = True  # Cambiar el estado a disponible
                 break
-        
         # Guardar los cambios en el archivo JSON
         file.seek(0)
         json.dump(data, file, indent=4)
         file.truncate()
-    
     flash("La casa ha sido marcada como disponible.", "success")
     return redirect(url_for('list_inactive_houses'))  # Redirigir a la lista de casas inactivas
 

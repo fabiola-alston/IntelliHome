@@ -20,7 +20,8 @@
             "fecha_nacimiento": "2027-09-09",
             "forma_pago": "Visca",
             "foto_perfil": "user.png",
-            "casas": []
+            "casas": [],
+            "metodos_pago": []
         },
         {
             "alias": "rodrigo",
@@ -55,6 +56,17 @@
             "foto_perfil": "aaron.20241012202619.cover.jpg",
             "casas": [
                 1
+            ],
+            "metodos_pago": [
+                {
+                    "card_number": "1221122112211221",
+                    "card_holder": "Aaron",
+                    "date": "12/28",
+                    "pin": "255",
+                    "brand": "visca",
+                    "debt": 0.0,
+                    "amount": 0.0
+                }
             ]
         }
     ],
